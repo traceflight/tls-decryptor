@@ -1,6 +1,16 @@
 # TLS Decrypt
 
-A TLS decryption library written in Rust, supporting TLS 1.2 and TLS 1.3 Application Data record decryption.
+A Rust TLS decryption library (with private key) supporting TLS 1.2 and TLS 1.3 Application Data record decryption.
+
+## Prerequisites
+
+**Important:** This library requires access to the private key to derive session keys and decrypt TLS traffic. Specifically:
+
+- **TLS 1.2 with RSA key exchange**: Requires the server's RSA private key to decrypt the Pre-Master Secret from the ClientKeyExchange message
+- **TLS 1.2 with ECDHE key exchange**: Requires the ECDHE private key to compute the shared secret
+- **TLS 1.3**: Requires the ECDHE private key to compute the shared secret
+
+Without the corresponding private key, this library cannot derive the session keys needed for decryption.
 
 ## Features
 

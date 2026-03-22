@@ -226,54 +226,7 @@ pub fn derive_keys_tls13(
 ) -> Result<SessionKey>
 ```
 
-### Error Types
-
-```rust
-pub enum DecryptError {
-    InvalidRecordHeader,           // Invalid TLS record header
-    UnsupportedTlsVersion(u16),    // Unsupported TLS version
-    UnsupportedCipherSuite(u16),   // Unsupported cipher suite
-    DecryptionFailed(String),      // Decryption failed
-    KeyDerivationFailed(String),   // Key derivation failed
-    InsufficientData,              // Insufficient data
-    AuthenticationFailed,          // Authentication tag verification failed
-    InvalidPreMasterSecret,        // Invalid Pre-Master Secret
-    RsaError(String),              // RSA decryption error
-    InvalidKeyLength { .. },       // Invalid key length
-    InvalidIvLength { .. },        // Invalid IV length
-    SequenceNumberOverflow,        // Sequence number overflow
-    CryptoError(String),           // Crypto error
-}
-```
-
 ## Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      tls-decrypt                            │
-├─────────────────────────────────────────────────────────────┤
-│  lib.rs - Public API exports                                │
-├─────────────┬─────────────┬─────────────┬───────────────────┤
-│ decrypter   │ key_        │ types       │ error             │
-│ .rs         │ derivation  │ .rs         │ .rs               │
-│             │ .rs         │             │                   │
-│ TlsDecrypter│ derive_     │ SessionKey  │ DecryptError      │
-│             │ keys_tls12  │ Direction   │                   │
-│             │ derive_     │ TlsVersion  │                   │
-│             │ keys_tls13  │ RecordType  │                   │
-├─────────────────────────────────────────────────────────────┤
-│                      cipher/                                │
-├─────────────┬─────────────┬─────────────────────────────────┤
-│ trait_def   │ registry    │ suites/                         │
-│ .rs         │ .rs         │                                 │
-│             │             │ tls_rsa_with_aes_128_gcm_sha256 │
-│ CipherContext│ CipherRegistry│ tls_rsa_with_aes_256_gcm_sha384│
-│             │             │ tls_ecdhe_rsa_with_chacha20...  │
-│             │             │ tls13_aes_128_gcm_sha256        │
-│             │             │ tls13_aes_256_gcm_sha384        │
-│             │             │ tls13_chacha20_poly1305_sha256  │
-└─────────────┴─────────────┴─────────────────────────────────┘
-```
 
 ### Cipher Suite Architecture
 

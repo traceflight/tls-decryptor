@@ -1,0 +1,186 @@
+//! TLS_RSA_WITH_AES_128_GCM_SHA256 (0x009C) cipher suite implementation
+
+use aes_gcm::{AeadInPlace, Aes128Gcm, KeyInit, Nonce, Tag};
+use rustls::CipherSuite;
+
+use crate::cipher::trait_def::CipherContext;
+use crate::error::{DecryptError, Result};
+use crate::types::TlsVersion;
+
+use super::aead_common::{split_ciphertext_and_tag, split_tls12_ciphertext};
+
+/// TLS_RSA_WITH_AES_128_GCM_SHA256 (0x009C)
+pub struct TlsRsaWithAes128GcmSha256;
+
+impl CipherContext for TlsRsaWithAes128GcmSha256 {
+    fn suite(&self) -> CipherSuite {
+        CipherSuite::TLS_RSA_WITH_AES_128_GCM_SHA256
+    }
+
+    fn version(&self) -> TlsVersion {
+        TlsVersion::Tls12
+    }
+
+    fn key_length(&self) -> usize {
+        16 // AES-128
+    }
+
+    fn iv_length(&self) -> usize {
+        4 // explicit nonce (TLS 1.2 AEAD)
+    }
+
+    fn tag_length(&self) -> usize {
+        16
+    }
+
+    fn needs_explicit_nonce(&self) -> bool {
+        true
+    }
+
+    fn decrypt(
+        &self,
+        key: &[u8],
+        iv: &[u8],
+        ciphertext: &[u8],
+        aad: &[u8],
+        _sequence_number: u64,
+    ) -> Result<Vec<u8>> {
+        // TLS 1.2 AEAD: ciphertext format is explicit_nonce || encrypted_data || tag
+        let (explicit_nonce, encrypted_data_with_tag) =
+            split_tls12_ciphertext(ciphertext).ok_or(DecryptError::InsufficientData)?;
+
+        // Validate minimum length (explicit_nonce + tag)
+        if encrypted_data_with_tag.len() < 16 {
+            return Err(DecryptError::InsufficientData);
+        }
+
+        // Validate key length
+        if key.len() != self.key_length() {
+            return Err(DecryptError::InvalidKeyLength {
+                expected: self.key_length(),
+                actual: key.len(),
+            });
+        }
+
+        // Validate IV length (validate before constructing nonce to avoid panic)
+        if iv.len() != self.iv_length() {
+            return Err(DecryptError::InvalidIvLength {
+                expected: self.iv_length(),
+                actual: iv.len(),
+            });
+        }
+
+        // Construct nonce: salt (iv) || explicit_nonce
+        let full_nonce = super::aead_common::build_tls12_nonce(iv, explicit_nonce)?;
+
+        let cipher =
+            Aes128Gcm::new_from_slice(key).map_err(|_| DecryptError::InvalidKeyLength {
+                expected: self.key_length(),
+                actual: key.len(),
+            })?;
+        let nonce = Nonce::from_slice(&full_nonce);
+
+        // Separate ciphertext and tag
+        let (plaintext, tag) = split_ciphertext_and_tag(encrypted_data_with_tag, 16)
+            .ok_or(DecryptError::InsufficientData)?;
+        let plaintext_vec = plaintext.to_vec();
+        let mut plaintext_buf = plaintext_vec;
+        let tag = Tag::from_slice(tag);
+
+        cipher
+            .decrypt_in_place_detached(&nonce, aad, &mut plaintext_buf, tag)
+            .map_err(|_| DecryptError::AuthenticationFailed)?;
+
+        Ok(plaintext_buf)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use hex_literal::hex;
+
+    use super::*;
+
+    #[test]
+    fn test_suite_id() {
+        let cipher = TlsRsaWithAes128GcmSha256;
+        assert_eq!(cipher.suite(), CipherSuite::TLS_RSA_WITH_AES_128_GCM_SHA256);
+    }
+
+    #[test]
+    fn test_key_iv_lengths() {
+        let cipher = TlsRsaWithAes128GcmSha256;
+        assert_eq!(cipher.key_length(), 16);
+        assert_eq!(cipher.iv_length(), 4);
+        assert_eq!(cipher.tag_length(), 16);
+        assert!(cipher.needs_explicit_nonce());
+    }
+
+    #[test]
+    fn test_decrypt_empty() {
+        let cipher = TlsRsaWithAes128GcmSha256;
+        let key = vec![0u8; 16];
+        let iv = vec![0u8; 4];
+        let ciphertext = vec![];
+        let aad = vec![];
+
+        let result = cipher.decrypt(&key, &iv, &ciphertext, &aad, 0);
+        assert!(matches!(result, Err(DecryptError::InsufficientData)));
+    }
+
+    #[test]
+    fn test_decrypt_invalid_key_length() {
+        let cipher = TlsRsaWithAes128GcmSha256;
+        let key = vec![0u8; 8]; // Invalid key length
+        let iv = vec![0u8; 4];
+        // TLS 1.2: explicit_nonce (8) + tag (16) = 24 bytes minimum
+        let ciphertext = vec![0u8; 24];
+        let aad = vec![];
+
+        let result = cipher.decrypt(&key, &iv, &ciphertext, &aad, 0);
+        assert!(matches!(result, Err(DecryptError::InvalidKeyLength { .. })));
+    }
+
+    #[test]
+    fn test_decrypt_invalid_iv_length() {
+        let cipher = TlsRsaWithAes128GcmSha256;
+        let key = vec![0u8; 16];
+        let iv = vec![0u8; 8]; // Invalid IV length
+        // TLS 1.2: explicit_nonce (8) + tag (16) = 24 bytes minimum
+        let ciphertext = vec![0u8; 24];
+        let aad = vec![];
+
+        let result = cipher.decrypt(&key, &iv, &ciphertext, &aad, 0);
+        assert!(matches!(result, Err(DecryptError::InvalidIvLength { .. })));
+    }
+
+    /// Integration test: verify decryption using test data generated by Python
+    #[test]
+    fn test_decrypt_with_generated_data() {
+        let cipher = TlsRsaWithAes128GcmSha256;
+
+        // Test data from tls_decrypt_test_cases.json
+        // client_write_key: "0621b262dccd5d443d7c67e2602f0774"
+        // client_write_iv: "03f29cc6"
+        // client_to_server.record: "1703030037000000000000000068c02b96163aab3c1db221857c62249029dcb096d9bbb63fc1f37f34c3f5fbfa2b5ad6b271c180061c7bc8cb475cea"
+        // client_to_server.plaintext: "Hello, TLS 1.2 RSA AES-128-GCM!"
+
+        let key = &hex!("0621b262dccd5d443d7c67e2602f0774");
+        let iv = &hex!("03f29cc6");
+        let record = &hex!(
+            "1703030037000000000000000068c02b96163aab3c1db221857c62249029dcb096d9bbb63fc1f37f34c3f5fbfa2b5ad6b271c180061c7bc8cb475cea"
+        );
+        let expected_plaintext = "Hello, TLS 1.2 RSA AES-128-GCM!";
+
+        // AAD is the record header (first 5 bytes)
+        let aad = &record[..5];
+
+        // ciphertext is the part after the record header (contains explicit_nonce + encrypted_data + tag)
+        let ciphertext = &record[5..];
+
+        let result = cipher.decrypt(key, iv, ciphertext, aad, 0).unwrap();
+        let decrypted = String::from_utf8(result).unwrap();
+
+        assert_eq!(decrypted, expected_plaintext);
+    }
+}

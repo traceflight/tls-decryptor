@@ -1,4 +1,4 @@
-//! TLS decrypter basic type definitions
+//! TLS Decryptor basic type definitions
 
 pub use rustls::CipherSuite;
 

@@ -1,2 +1,41 @@
+# Build output
 /target
+
+# Plan files
 /plan
+
+# Cargo.lock for libraries (uncomment if publishing as a library)
+Cargo.lock
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Rust analyzer
+.rust-analyzer/
+
+# Backup files
+*.bak
+*.backup
+
+# Logs
+*.log
+
+# Coverage
+*.gcno
+*.gcda
+coverage/
+lcov/
+
+# Profiling
+perf.data
+perf.data.old
+flamegraph.svg
+
+# Test data generated files
+tests/testdata/*.pem
+tests/testdata/*.key

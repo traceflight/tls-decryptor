@@ -1,4 +1,4 @@
-//! TLS decrypter error type definitions
+//! TLS Decryptor error type definitions
 
 use thiserror::Error;
 

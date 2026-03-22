@@ -1,4 +1,4 @@
-# TLS Decrypt
+# TLS Decryptor
 
 A Rust TLS decryption library (with private key) supporting TLS 1.2 and TLS 1.3 Application Data record decryption.
 
@@ -42,7 +42,7 @@ Add the dependency to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-tls-decrypt = "0.1.0"
+tls-decryptor = "0.1.0"
 ```
 
 ## Quick Start
@@ -50,14 +50,14 @@ tls-decrypt = "0.1.0"
 ### TLS 1.2 RSA Key Exchange
 
 ```rust
-use tls_decrypt::{
+use tls_decryptor::{
     TlsDecrypter, SessionKey, Direction,
     key_derivation::{derive_keys_tls12, decrypt_pre_master_secret_rsa},
     types::TlsVersion,
 };
 use rustls::CipherSuite;
 
-fn main() -> Result<(), tls_decrypt::DecryptError> {
+fn main() -> Result<(), tls_decryptor::DecryptError> {
     // 1. Decrypt Pre-Master Secret using private key
     let private_key_pem = std::fs::read_to_string("server_key.pem")?;
     let encrypted_pms = /* extracted from ClientKeyExchange message */;
@@ -93,13 +93,13 @@ fn main() -> Result<(), tls_decrypt::DecryptError> {
 ### TLS 1.3 ECDHE Key Exchange
 
 ```rust
-use tls_decrypt::{
+use tls_decryptor::{
     TlsDecrypter, Direction,
     key_derivation::derive_keys_tls13,
 };
 use rustls::CipherSuite;
 
-fn main() -> Result<(), tls_decrypt::DecryptError> {
+fn main() -> Result<(), tls_decryptor::DecryptError> {
     // 1. Compute ECDHE shared secret
     let shared_secret = /* ECDHE shared secret */;
 
@@ -133,11 +133,11 @@ fn main() -> Result<(), tls_decrypt::DecryptError> {
 If you already have the session keys (e.g., exported from Wireshark or other tools), you can directly create a `SessionKey`:
 
 ```rust
-use tls_decrypt::{TlsDecrypter, SessionKey, Direction};
-use tls_decrypt::types::TlsVersion;
+use tls_decryptor::{TlsDecrypter, SessionKey, Direction};
+use tls_decryptor::types::TlsVersion;
 use rustls::CipherSuite;
 
-fn main() -> Result<(), tls_decrypt::DecryptError> {
+fn main() -> Result<(), tls_decryptor::DecryptError> {
     // Directly create session key
     let session_key = SessionKey::new(
         TlsVersion::Tls13,

@@ -1,6 +1,6 @@
 //! TLS Decryptor Library
 //!
-//! A TLS packet decryption library written in Rust, supporting TLS 1.2 and TLS 1.3.
+//! A TLS packet decryption library (with private key) written in Rust, supporting TLS 1.2 and TLS 1.3.
 //!
 //! # Features
 //!

@@ -1,11 +1,10 @@
 //! TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256 (0xCCA8) cipher suite implementation
 
 use chacha20poly1305::{AeadInPlace, ChaCha20Poly1305, KeyInit, Nonce, Tag};
-use rustls::CipherSuite;
 
 use crate::cipher::trait_def::CipherContext;
 use crate::error::{DecryptError, Result};
-use crate::types::TlsVersion;
+use crate::types::CipherSuite;
 
 use super::aead_common::{build_tls13_nonce, split_ciphertext_and_tag};
 
@@ -14,27 +13,7 @@ pub struct TlsEcdheRsaWithChaCha20Poly1305Sha256;
 
 impl CipherContext for TlsEcdheRsaWithChaCha20Poly1305Sha256 {
     fn suite(&self) -> CipherSuite {
-        CipherSuite::TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
-    }
-
-    fn version(&self) -> TlsVersion {
-        TlsVersion::Tls12
-    }
-
-    fn key_length(&self) -> usize {
-        32
-    }
-
-    fn iv_length(&self) -> usize {
-        12
-    }
-
-    fn tag_length(&self) -> usize {
-        16
-    }
-
-    fn needs_explicit_nonce(&self) -> bool {
-        false
+        CipherSuite::TlsEcdheRsaWithChaCha20Poly1305Sha256
     }
 
     fn decrypt(
@@ -93,7 +72,7 @@ mod tests {
         let cipher = TlsEcdheRsaWithChaCha20Poly1305Sha256;
         assert_eq!(
             cipher.suite(),
-            CipherSuite::TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+            CipherSuite::TlsEcdheRsaWithChaCha20Poly1305Sha256
         );
     }
 

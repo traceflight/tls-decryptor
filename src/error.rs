@@ -56,6 +56,46 @@ pub enum DecryptError {
     /// Unknown crypto error
     #[error("Crypto error: {0}")]
     CryptoError(String),
+
+    /// Invalid handshake message
+    #[error("Invalid handshake message")]
+    InvalidHandshakeMessage,
+
+    /// Handshake not complete
+    #[error("Handshake not complete")]
+    HandshakeNotComplete,
+
+    /// TLS 1.3 key deriver state error
+    #[error("Invalid key deriver state: {0}")]
+    InvalidDeriverState(String),
+
+    /// Unexpected handshake message order
+    #[error("Unexpected handshake message: expected {expected}, got {got}")]
+    UnexpectedHandshakeMessage { expected: String, got: String },
+
+    /// Hello Retry Request processing error
+    #[error("Hello Retry Request error: {0}")]
+    HrrError(String),
+
+    /// Unsupported key share group
+    #[error("Unsupported key share group: {0}")]
+    UnsupportedKeyShareGroup(u16),
+
+    /// Unsupported curve type
+    #[error("Unsupported curve type: {0:#x}")]
+    UnsupportedCurveType(u16),
+
+    /// DHE computation error
+    #[error("DHE computation error: {0}")]
+    DheError(String),
+
+    /// Invalid DH parameters
+    #[error("Invalid DH parameters: {0}")]
+    InvalidDhParameters(String),
+
+    /// Handshake message parse error
+    #[error("Handshake message parse error: {0}")]
+    HandshakeParseError(String),
 }
 
 /// Type alias for decryption results

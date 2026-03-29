@@ -1,11 +1,10 @@
 //! TLS13_CHACHA20_POLY1305_SHA256 (0x1303) cipher suite implementation
 
 use chacha20poly1305::{AeadInPlace, ChaCha20Poly1305, KeyInit, Nonce, Tag};
-use rustls::CipherSuite;
 
 use crate::cipher::trait_def::CipherContext;
 use crate::error::{DecryptError, Result};
-use crate::types::TlsVersion;
+use crate::types::CipherSuite;
 
 use super::aead_common::{build_tls13_nonce, split_ciphertext_and_tag};
 
@@ -14,27 +13,7 @@ pub struct Tls13ChaCha20Poly1305Sha256;
 
 impl CipherContext for Tls13ChaCha20Poly1305Sha256 {
     fn suite(&self) -> CipherSuite {
-        CipherSuite::TLS13_CHACHA20_POLY1305_SHA256
-    }
-
-    fn version(&self) -> TlsVersion {
-        TlsVersion::Tls13
-    }
-
-    fn key_length(&self) -> usize {
-        32 // ChaCha20 uses 256-bit key
-    }
-
-    fn iv_length(&self) -> usize {
-        12
-    }
-
-    fn tag_length(&self) -> usize {
-        16 // Poly1305 tag length
-    }
-
-    fn needs_explicit_nonce(&self) -> bool {
-        false
+        CipherSuite::Tls13ChaCha20Poly1305Sha256
     }
 
     fn decrypt(
@@ -91,7 +70,7 @@ mod tests {
     #[test]
     fn test_suite_id() {
         let cipher = Tls13ChaCha20Poly1305Sha256;
-        assert_eq!(cipher.suite(), CipherSuite::TLS13_CHACHA20_POLY1305_SHA256);
+        assert_eq!(cipher.suite(), CipherSuite::Tls13ChaCha20Poly1305Sha256);
     }
 
     #[test]

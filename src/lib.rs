@@ -16,14 +16,14 @@
 //! ```rust,ignore
 //! use tls_decryptor::{
 //!     TlsDecrypter, SessionKey, Direction,
-//!     key_derivation::{derive_keys_tls12, decrypt_pre_master_secret_rsa},
+//!     key_derivation::derive_keys_tls12,
 //! };
 //!
 //! # fn example() -> Result<(), tls_decryptor::error::DecryptError> {
-//! // 1. Decrypt Pre-Master Secret using private key
+//! // 1. Decrypt Pre-Master Secret using private key (requires external RSA library)
 //! let private_key_pem = std::fs::read_to_string("server_key.pem")?;
 //! let encrypted_pms = /* extracted from ClientKeyExchange */;
-//! let pre_master_secret = decrypt_pre_master_secret_rsa(&private_key_pem, &encrypted_pms)?;
+//! let pre_master_secret = /* decrypt using private key */;
 //!
 //! // 2. Derive session keys
 //! let client_random = /* extracted from ClientHello */;
@@ -60,14 +60,10 @@
 //! let shared_secret = /* ECDHE shared secret */;
 //!
 //! // 2. Derive session keys
-//! let client_hello_random = /* extracted from ClientHello */;
-//! let server_hello_random = /* extracted from ServerHello */;
 //! let cipher_suite = /* TLS 1.3 cipher suite */;
 //! let handshake_hash = /* hash of handshake messages */;
 //!
 //! let session_key = derive_keys_tls13(
-//!     &client_hello_random,
-//!     &server_hello_random,
 //!     &shared_secret,
 //!     cipher_suite,
 //!     &handshake_hash,
@@ -88,9 +84,19 @@ pub mod decrypter;
 pub mod error;
 pub mod key_derivation;
 pub mod types;
+pub mod util;
 
 // Re-export commonly used types
 pub use decrypter::TlsDecrypter;
 pub use error::{DecryptError, Result};
-pub use key_derivation::{decrypt_pre_master_secret_rsa, derive_keys_tls12, derive_keys_tls13};
-pub use types::{CipherSuite, Direction, SessionKey, TlsVersion};
+pub use key_derivation::{
+    DeriverEvent, DeriverState, HrrData, Tls13KeyDeriver, derive_keys_tls12, derive_keys_tls13,
+};
+pub use types::{
+    CurveType, Direction, SessionKey, TlsRecordHeader, TlsRecordType, TlsVersion,
+    parse_tls_record_header,
+};
+pub use util::{
+    DhParamsRef, ServerPublicKey, compute_ecdhe_shared_secret, compute_pre_master_secret_dhe,
+    compute_pre_master_secret_ecdhe, compute_shared_secret_tls13, extract_server_public_key,
+};

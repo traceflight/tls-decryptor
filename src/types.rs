@@ -1,34 +1,8 @@
 //! TLS Decryptor basic type definitions
 
-pub use rustls::CipherSuite;
-
-/// TLS version
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum TlsVersion {
-    /// TLS 1.2 (RFC 5246)
-    Tls12,
-    /// TLS 1.3 (RFC 8446)
-    Tls13,
-}
-
-impl TlsVersion {
-    /// Convert from wire format to TlsVersion
-    pub fn from_wire(version: u16) -> Option<Self> {
-        match version {
-            0x0303 => Some(Self::Tls12),
-            0x0304 => Some(Self::Tls13),
-            _ => None,
-        }
-    }
-
-    /// Convert to wire format
-    pub fn to_wire(self) -> u16 {
-        match self {
-            Self::Tls12 => 0x0303,
-            Self::Tls13 => 0x0304,
-        }
-    }
-}
+pub use tls_parser::{
+    TlsCipherSuiteID, TlsRecordHeader, TlsRecordType, TlsVersion, parse_tls_record_header,
+};
 
 /// Decryption direction
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -78,9 +52,28 @@ impl SessionKey {
         }
     }
 
+    /// Create a new SessionKey with TlsCipherSuiteID
+    pub fn new_with_id(
+        version: TlsVersion,
+        cipher_suite: TlsCipherSuiteID,
+        client_write_key: Vec<u8>,
+        server_write_key: Vec<u8>,
+        client_write_iv: Vec<u8>,
+        server_write_iv: Vec<u8>,
+    ) -> Self {
+        Self {
+            version,
+            cipher_suite: CipherSuite::from(cipher_suite),
+            client_write_key,
+            server_write_key,
+            client_write_iv,
+            server_write_iv,
+        }
+    }
+
     /// Get cipher suite ID (u16 format)
     pub fn cipher_suite_id(&self) -> u16 {
-        self.cipher_suite.into()
+        self.cipher_suite.to_u16()
     }
 
     /// Get write key based on direction
@@ -97,78 +90,6 @@ impl SessionKey {
             Direction::ClientToServer => &self.client_write_iv,
             Direction::ServerToClient => &self.server_write_iv,
         }
-    }
-}
-
-/// TLS record type
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(u8)]
-pub enum RecordType {
-    /// ChangeCipherSpec (TLS 1.2)
-    ChangeCipherSpec = 20,
-    /// Alert
-    Alert = 21,
-    /// Handshake
-    Handshake = 22,
-    /// Application Data
-    ApplicationData = 23,
-}
-
-impl RecordType {
-    /// Convert from byte to RecordType
-    pub fn from_byte(b: u8) -> Option<Self> {
-        match b {
-            20 => Some(Self::ChangeCipherSpec),
-            21 => Some(Self::Alert),
-            22 => Some(Self::Handshake),
-            23 => Some(Self::ApplicationData),
-            _ => None,
-        }
-    }
-
-    /// Convert to byte
-    pub fn to_byte(self) -> u8 {
-        self as u8
-    }
-}
-
-/// TLS record header
-#[derive(Debug, Clone)]
-pub struct RecordHeader {
-    /// Record type
-    pub content_type: RecordType,
-    /// TLS version
-    pub version: u16,
-    /// Payload length
-    pub length: u16,
-}
-
-impl RecordHeader {
-    /// Parse record header (5 bytes)
-    pub fn parse(data: &[u8]) -> crate::error::Result<Self> {
-        if data.len() < 5 {
-            return Err(crate::error::DecryptError::InsufficientData);
-        }
-
-        let content_type = RecordType::from_byte(data[0])
-            .ok_or(crate::error::DecryptError::InvalidRecordHeader)?;
-        let version = u16::from_be_bytes([data[1], data[2]]);
-        let length = u16::from_be_bytes([data[3], data[4]]);
-
-        Ok(Self {
-            content_type,
-            version,
-            length,
-        })
-    }
-
-    /// Serialize to bytes
-    pub fn to_bytes(&self) -> [u8; 5] {
-        let mut bytes = [0u8; 5];
-        bytes[0] = self.content_type.to_byte();
-        bytes[1..3].copy_from_slice(&self.version.to_be_bytes());
-        bytes[3..5].copy_from_slice(&self.length.to_be_bytes());
-        bytes
     }
 }
 
@@ -223,5 +144,910 @@ impl Tls13KeyParams {
             shared_secret,
             handshake_hash,
         }
+    }
+}
+
+/// Elliptic curve type
+///
+/// Supports named curves for TLS 1.2 (RFC 4492) and TLS 1.3 (RFC 8446)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u16)]
+pub enum CurveType {
+    /// secp256r1 (P-256) - RFC 4492/8446 group 0x0017
+    Secp256r1 = 0x0017,
+    /// secp384r1 (P-384) - RFC 4492/8446 group 0x0018
+    Secp384r1 = 0x0018,
+    /// secp521r1 (P-521) - RFC 4492/8446 group 0x0019
+    Secp521r1 = 0x0019,
+    /// x25519 - RFC 8446 group 0x001D
+    X25519 = 0x001D,
+    /// x448 - RFC 8446 group 0x001E
+    X448 = 0x001E,
+}
+
+impl CurveType {
+    /// Convert from u16 to CurveType
+    pub fn from_u16(value: u16) -> Option<Self> {
+        match value {
+            0x0017 => Some(Self::Secp256r1),
+            0x0018 => Some(Self::Secp384r1),
+            0x0019 => Some(Self::Secp521r1),
+            0x001D => Some(Self::X25519),
+            0x001E => Some(Self::X448),
+            _ => None,
+        }
+    }
+
+    /// Convert to u16
+    pub fn to_u16(self) -> u16 {
+        self as u16
+    }
+
+    /// Get the expected key share length for this curve (uncompressed public key)
+    ///
+    /// This is the same as `public_key_uncompressed_length()`.
+    /// For X25519/X448, this returns the raw key length.
+    pub fn key_share_length(self) -> usize {
+        self.public_key_uncompressed_length()
+    }
+
+    /// Get the shared secret length for this curve
+    pub fn shared_secret_length(self) -> usize {
+        match self {
+            Self::Secp256r1 => 32,
+            Self::Secp384r1 => 48,
+            Self::Secp521r1 => 66,
+            Self::X25519 => 32,
+            Self::X448 => 56,
+        }
+    }
+
+    /// Get the private key length for this curve (in bytes)
+    pub fn private_key_length(self) -> usize {
+        match self {
+            Self::Secp256r1 => 32,
+            Self::Secp384r1 => 48,
+            Self::Secp521r1 => 66,
+            Self::X25519 => 32,
+            Self::X448 => 56,
+        }
+    }
+
+    /// Get the public key uncompressed length for this curve (in bytes)
+    ///
+    /// For NIST curves (secp256r1, secp384r1, secp521r1):
+    /// - Format: 0x04 prefix + X coordinate + Y coordinate
+    /// - Total: 1 + 2 * coordinate_size
+    ///
+    /// For X25519/X448 (Montgomery curves):
+    /// - No compression format, just raw bytes
+    pub fn public_key_uncompressed_length(self) -> usize {
+        match self {
+            Self::Secp256r1 => 65,  // 1 + 32 + 32
+            Self::Secp384r1 => 97,  // 1 + 48 + 48
+            Self::Secp521r1 => 133, // 1 + 66 + 66
+            Self::X25519 => 32,     // Raw 32-byte key
+            Self::X448 => 56,       // Raw 56-byte key
+        }
+    }
+
+    /// Get the public key compressed length for this curve (in bytes)
+    ///
+    /// For NIST curves (secp256r1, secp384r1, secp521r1):
+    /// - Format: 0x02 or 0x03 prefix + X coordinate
+    /// - Total: 1 + coordinate_size
+    ///
+    /// For X25519/X448 (Montgomery curves):
+    /// - No compression format, same as uncompressed (raw bytes)
+    pub fn public_key_compressed_length(self) -> usize {
+        match self {
+            Self::Secp256r1 => 33, // 1 + 32
+            Self::Secp384r1 => 49, // 1 + 48
+            Self::Secp521r1 => 67, // 1 + 66
+            Self::X25519 => 32,    // Raw 32-byte key (no compression)
+            Self::X448 => 56,      // Raw 56-byte key (no compression)
+        }
+    }
+
+    /// Check if the given private key length is valid for this curve
+    ///
+    /// For P-521, both 65 and 66 bytes are accepted because:
+    /// - P-521 private key is 521 bits = 65.125 bytes
+    /// - When the leading bit is 0, the key can be represented in 65 bytes
+    /// - When the leading bit is 1, 66 bytes are needed
+    pub fn is_valid_private_key_length(self, len: usize) -> bool {
+        match self {
+            Self::Secp521r1 => len == 65 || len == 66,
+            _ => len == self.private_key_length(),
+        }
+    }
+
+    /// Check if the given public key length is valid for this curve (either compressed or uncompressed)
+    pub fn is_valid_public_key_length(self, len: usize) -> bool {
+        len == self.public_key_uncompressed_length() || len == self.public_key_compressed_length()
+    }
+}
+
+/// DHE parameters
+///
+/// Used for TLS 1.2 DHE key exchange
+#[derive(Debug, Clone)]
+pub struct DhParams {
+    /// Prime p (big-endian byte order)
+    pub p: Vec<u8>,
+    /// Generator g (big-endian byte order)
+    pub g: Vec<u8>,
+}
+
+impl DhParams {
+    /// Create new DH parameters
+    pub fn new(p: Vec<u8>, g: Vec<u8>) -> Self {
+        Self { p, g }
+    }
+}
+
+/// TLS Cipher Suite enumeration
+///
+/// Provides type-safe representation of TLS cipher suites without depending on rustls.
+/// Reference: rustls CipherSuite definition
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u16)]
+pub enum CipherSuite {
+    /// TLS_NULL_WITH_NULL_NULL
+    TlsNullWithNullNull = 0x0000,
+    /// TLS_RSA_WITH_NULL_MD5
+    TlsRsaWithNullMd5 = 0x0001,
+    /// TLS_RSA_WITH_NULL_SHA
+    TlsRsaWithNullSha = 0x0002,
+    /// TLS_RSA_WITH_RC4_128_MD5
+    TlsRsaWithRc4128Md5 = 0x0004,
+    /// TLS_RSA_WITH_RC4_128_SHA
+    TlsRsaWithRc4128Sha = 0x0005,
+    /// TLS_RSA_WITH_DES_CBC_SHA
+    TlsRsaWithDesCbcSha = 0x0009,
+    /// TLS_RSA_WITH_3DES_EDE_CBC_SHA
+    TlsRsaWith3desEdeCbcSha = 0x000a,
+    /// TLS_RSA_WITH_AES_128_CBC_SHA
+    TlsRsaWithAes128CbcSha = 0x002f,
+    /// TLS_RSA_WITH_AES_256_CBC_SHA
+    TlsRsaWithAes256CbcSha = 0x0035,
+    /// TLS_RSA_WITH_AES_128_CBC_SHA256
+    TlsRsaWithAes128CbcSha256 = 0x003c,
+    /// TLS_RSA_WITH_AES_256_CBC_SHA256
+    TlsRsaWithAes256CbcSha256 = 0x003d,
+    /// TLS_RSA_WITH_AES_128_GCM_SHA256
+    TlsRsaWithAes128GcmSha256 = 0x009c,
+    /// TLS_RSA_WITH_AES_256_GCM_SHA384
+    TlsRsaWithAes256GcmSha384 = 0x009d,
+    /// TLS_DHE_RSA_WITH_AES_128_GCM_SHA256
+    TlsDheRsaWithAes128GcmSha256 = 0x009e,
+    /// TLS_DHE_RSA_WITH_AES_256_GCM_SHA384
+    TlsDheRsaWithAes256GcmSha384 = 0x009f,
+    /// TLS_PSK_WITH_AES_128_GCM_SHA256
+    TlsPskWithAes128GcmSha256 = 0x00a8,
+    /// TLS_PSK_WITH_AES_256_GCM_SHA384
+    TlsPskWithAes256GcmSha384 = 0x00a9,
+    /// TLS_EMPTY_RENEGOTIATION_INFO_SCSV
+    TlsEmptyRenegotiationInfoScsv = 0x00ff,
+    /// TLS13_AES_128_GCM_SHA256
+    Tls13Aes128GcmSha256 = 0x1301,
+    /// TLS13_AES_256_GCM_SHA384
+    Tls13Aes256GcmSha384 = 0x1302,
+    /// TLS13_CHACHA20_POLY1305_SHA256
+    Tls13ChaCha20Poly1305Sha256 = 0x1303,
+    /// TLS13_AES_128_CCM_SHA256
+    Tls13Aes128CcmSha256 = 0x1304,
+    /// TLS13_AES_128_CCM_8_SHA256
+    Tls13Aes128Ccm8Sha256 = 0x1305,
+    /// TLS_ECDH_ECDSA_WITH_NULL_SHA
+    TlsEcdhEcdsaWithNullSha = 0xc001,
+    /// TLS_ECDH_ECDSA_WITH_RC4_128_SHA
+    TlsEcdhEcdsaWithRc4128Sha = 0xc002,
+    /// TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA
+    TlsEcdhEcdsaWith3desEdeCbcSha = 0xc003,
+    /// TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA
+    TlsEcdhEcdsaWithAes128CbcSha = 0xc004,
+    /// TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA
+    TlsEcdhEcdsaWithAes256CbcSha = 0xc005,
+    /// TLS_ECDHE_ECDSA_WITH_NULL_SHA
+    TlsEcdheEcdsaWithNullSha = 0xc006,
+    /// TLS_ECDHE_ECDSA_WITH_RC4_128_SHA
+    TlsEcdheEcdsaWithRc4128Sha = 0xc007,
+    /// TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA
+    TlsEcdheEcdsaWith3desEdeCbcSha = 0xc008,
+    /// TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
+    TlsEcdheEcdsaWithAes128CbcSha = 0xc009,
+    /// TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
+    TlsEcdheEcdsaWithAes256CbcSha = 0xc00a,
+    /// TLS_ECDH_RSA_WITH_NULL_SHA
+    TlsEcdhRsaWithNullSha = 0xc00b,
+    /// TLS_ECDH_RSA_WITH_RC4_128_SHA
+    TlsEcdhRsaWithRc4128Sha = 0xc00c,
+    /// TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA
+    TlsEcdhRsaWith3desEdeCbcSha = 0xc00d,
+    /// TLS_ECDH_RSA_WITH_AES_128_CBC_SHA
+    TlsEcdhRsaWithAes128CbcSha = 0xc00e,
+    /// TLS_ECDH_RSA_WITH_AES_256_CBC_SHA
+    TlsEcdhRsaWithAes256CbcSha = 0xc00f,
+    /// TLS_ECDHE_RSA_WITH_NULL_SHA
+    TlsEcdheRsaWithNullSha = 0xc010,
+    /// TLS_ECDHE_RSA_WITH_RC4_128_SHA
+    TlsEcdheRsaWithRc4128Sha = 0xc011,
+    /// TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA
+    TlsEcdheRsaWith3desEdeCbcSha = 0xc012,
+    /// TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
+    TlsEcdheRsaWithAes128CbcSha = 0xc013,
+    /// TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
+    TlsEcdheRsaWithAes256CbcSha = 0xc014,
+    /// TLS_ECDH_anon_WITH_NULL_SHA
+    TlsEcdhAnonWithNullSha = 0xc015,
+    /// TLS_ECDH_anon_WITH_RC4_128_SHA
+    TlsEcdhAnonWithRc4128Sha = 0xc016,
+    /// TLS_ECDH_anon_WITH_3DES_EDE_CBC_SHA
+    TlsEcdhAnonWith3desEdeCbcSha = 0xc017,
+    /// TLS_ECDH_anon_WITH_AES_128_CBC_SHA
+    TlsEcdhAnonWithAes128CbcSha = 0xc018,
+    /// TLS_ECDH_anon_WITH_AES_256_CBC_SHA
+    TlsEcdhAnonWithAes256CbcSha = 0xc019,
+    /// TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
+    TlsEcdheEcdsaWithAes128CbcSha256 = 0xc023,
+    /// TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384
+    TlsEcdheEcdsaWithAes256CbcSha384 = 0xc024,
+    /// TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256
+    TlsEcdhEcdsaWithAes128CbcSha256 = 0xc025,
+    /// TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384
+    TlsEcdhEcdsaWithAes256CbcSha384 = 0xc026,
+    /// TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
+    TlsEcdheRsaWithAes128CbcSha256 = 0xc027,
+    /// TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384
+    TlsEcdheRsaWithAes256CbcSha384 = 0xc028,
+    /// TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256
+    TlsEcdhRsaWithAes128CbcSha256 = 0xc029,
+    /// TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384
+    TlsEcdhRsaWithAes256CbcSha384 = 0xc02a,
+    /// TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+    TlsEcdheEcdsaWithAes128GcmSha256 = 0xc02b,
+    /// TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+    TlsEcdheEcdsaWithAes256GcmSha384 = 0xc02c,
+    /// TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256
+    TlsEcdhEcdsaWithAes128GcmSha256 = 0xc02d,
+    /// TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384
+    TlsEcdhEcdsaWithAes256GcmSha384 = 0xc02e,
+    /// TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+    TlsEcdheRsaWithAes128GcmSha256 = 0xc02f,
+    /// TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+    TlsEcdheRsaWithAes256GcmSha384 = 0xc030,
+    /// TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256
+    TlsEcdhRsaWithAes128GcmSha256 = 0xc031,
+    /// TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384
+    TlsEcdhRsaWithAes256GcmSha384 = 0xc032,
+    /// TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+    TlsEcdheRsaWithChaCha20Poly1305Sha256 = 0xcca8,
+    /// TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256
+    TlsEcdheEcdsaWithChaCha20Poly1305Sha256 = 0xcca9,
+    /// TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+    TlsDheRsaWithChaCha20Poly1305Sha256 = 0xccaa,
+    /// Unknown cipher suite (holds the raw u16 value)
+    Unknown(u16),
+}
+
+impl CipherSuite {
+    /// Convert from u16 to CipherSuite
+    pub fn from_u16(value: u16) -> Self {
+        match value {
+            0x0000 => Self::TlsNullWithNullNull,
+            0x0001 => Self::TlsRsaWithNullMd5,
+            0x0002 => Self::TlsRsaWithNullSha,
+            0x0004 => Self::TlsRsaWithRc4128Md5,
+            0x0005 => Self::TlsRsaWithRc4128Sha,
+            0x0009 => Self::TlsRsaWithDesCbcSha,
+            0x000a => Self::TlsRsaWith3desEdeCbcSha,
+            0x002f => Self::TlsRsaWithAes128CbcSha,
+            0x0035 => Self::TlsRsaWithAes256CbcSha,
+            0x003c => Self::TlsRsaWithAes128CbcSha256,
+            0x003d => Self::TlsRsaWithAes256CbcSha256,
+            0x009c => Self::TlsRsaWithAes128GcmSha256,
+            0x009d => Self::TlsRsaWithAes256GcmSha384,
+            0x009e => Self::TlsDheRsaWithAes128GcmSha256,
+            0x009f => Self::TlsDheRsaWithAes256GcmSha384,
+            0x00a8 => Self::TlsPskWithAes128GcmSha256,
+            0x00a9 => Self::TlsPskWithAes256GcmSha384,
+            0x00ff => Self::TlsEmptyRenegotiationInfoScsv,
+            0x1301 => Self::Tls13Aes128GcmSha256,
+            0x1302 => Self::Tls13Aes256GcmSha384,
+            0x1303 => Self::Tls13ChaCha20Poly1305Sha256,
+            0x1304 => Self::Tls13Aes128CcmSha256,
+            0x1305 => Self::Tls13Aes128Ccm8Sha256,
+            0xc001 => Self::TlsEcdhEcdsaWithNullSha,
+            0xc002 => Self::TlsEcdhEcdsaWithRc4128Sha,
+            0xc003 => Self::TlsEcdhEcdsaWith3desEdeCbcSha,
+            0xc004 => Self::TlsEcdhEcdsaWithAes128CbcSha,
+            0xc005 => Self::TlsEcdhEcdsaWithAes256CbcSha,
+            0xc006 => Self::TlsEcdheEcdsaWithNullSha,
+            0xc007 => Self::TlsEcdheEcdsaWithRc4128Sha,
+            0xc008 => Self::TlsEcdheEcdsaWith3desEdeCbcSha,
+            0xc009 => Self::TlsEcdheEcdsaWithAes128CbcSha,
+            0xc00a => Self::TlsEcdheEcdsaWithAes256CbcSha,
+            0xc00b => Self::TlsEcdhRsaWithNullSha,
+            0xc00c => Self::TlsEcdhRsaWithRc4128Sha,
+            0xc00d => Self::TlsEcdhRsaWith3desEdeCbcSha,
+            0xc00e => Self::TlsEcdhRsaWithAes128CbcSha,
+            0xc00f => Self::TlsEcdhRsaWithAes256CbcSha,
+            0xc010 => Self::TlsEcdheRsaWithNullSha,
+            0xc011 => Self::TlsEcdheRsaWithRc4128Sha,
+            0xc012 => Self::TlsEcdheRsaWith3desEdeCbcSha,
+            0xc013 => Self::TlsEcdheRsaWithAes128CbcSha,
+            0xc014 => Self::TlsEcdheRsaWithAes256CbcSha,
+            0xc015 => Self::TlsEcdhAnonWithNullSha,
+            0xc016 => Self::TlsEcdhAnonWithRc4128Sha,
+            0xc017 => Self::TlsEcdhAnonWith3desEdeCbcSha,
+            0xc018 => Self::TlsEcdhAnonWithAes128CbcSha,
+            0xc019 => Self::TlsEcdhAnonWithAes256CbcSha,
+            0xc023 => Self::TlsEcdheEcdsaWithAes128CbcSha256,
+            0xc024 => Self::TlsEcdheEcdsaWithAes256CbcSha384,
+            0xc025 => Self::TlsEcdhEcdsaWithAes128CbcSha256,
+            0xc026 => Self::TlsEcdhEcdsaWithAes256CbcSha384,
+            0xc027 => Self::TlsEcdheRsaWithAes128CbcSha256,
+            0xc028 => Self::TlsEcdheRsaWithAes256CbcSha384,
+            0xc029 => Self::TlsEcdhRsaWithAes128CbcSha256,
+            0xc02a => Self::TlsEcdhRsaWithAes256CbcSha384,
+            0xc02b => Self::TlsEcdheEcdsaWithAes128GcmSha256,
+            0xc02c => Self::TlsEcdheEcdsaWithAes256GcmSha384,
+            0xc02d => Self::TlsEcdhEcdsaWithAes128GcmSha256,
+            0xc02e => Self::TlsEcdhEcdsaWithAes256GcmSha384,
+            0xc02f => Self::TlsEcdheRsaWithAes128GcmSha256,
+            0xc030 => Self::TlsEcdheRsaWithAes256GcmSha384,
+            0xc031 => Self::TlsEcdhRsaWithAes128GcmSha256,
+            0xc032 => Self::TlsEcdhRsaWithAes256GcmSha384,
+            0xcca8 => Self::TlsEcdheRsaWithChaCha20Poly1305Sha256,
+            0xcca9 => Self::TlsEcdheEcdsaWithChaCha20Poly1305Sha256,
+            0xccaa => Self::TlsDheRsaWithChaCha20Poly1305Sha256,
+            _ => Self::Unknown(value),
+        }
+    }
+
+    /// Convert to u16
+    pub fn to_u16(self) -> u16 {
+        match self {
+            Self::TlsNullWithNullNull => 0x0000,
+            Self::TlsRsaWithNullMd5 => 0x0001,
+            Self::TlsRsaWithNullSha => 0x0002,
+            Self::TlsRsaWithRc4128Md5 => 0x0004,
+            Self::TlsRsaWithRc4128Sha => 0x0005,
+            Self::TlsRsaWithDesCbcSha => 0x0009,
+            Self::TlsRsaWith3desEdeCbcSha => 0x000a,
+            Self::TlsRsaWithAes128CbcSha => 0x002f,
+            Self::TlsRsaWithAes256CbcSha => 0x0035,
+            Self::TlsRsaWithAes128CbcSha256 => 0x003c,
+            Self::TlsRsaWithAes256CbcSha256 => 0x003d,
+            Self::TlsRsaWithAes128GcmSha256 => 0x009c,
+            Self::TlsRsaWithAes256GcmSha384 => 0x009d,
+            Self::TlsDheRsaWithAes128GcmSha256 => 0x009e,
+            Self::TlsDheRsaWithAes256GcmSha384 => 0x009f,
+            Self::TlsPskWithAes128GcmSha256 => 0x00a8,
+            Self::TlsPskWithAes256GcmSha384 => 0x00a9,
+            Self::TlsEmptyRenegotiationInfoScsv => 0x00ff,
+            Self::Tls13Aes128GcmSha256 => 0x1301,
+            Self::Tls13Aes256GcmSha384 => 0x1302,
+            Self::Tls13ChaCha20Poly1305Sha256 => 0x1303,
+            Self::Tls13Aes128CcmSha256 => 0x1304,
+            Self::Tls13Aes128Ccm8Sha256 => 0x1305,
+            Self::TlsEcdhEcdsaWithNullSha => 0xc001,
+            Self::TlsEcdhEcdsaWithRc4128Sha => 0xc002,
+            Self::TlsEcdhEcdsaWith3desEdeCbcSha => 0xc003,
+            Self::TlsEcdhEcdsaWithAes128CbcSha => 0xc004,
+            Self::TlsEcdhEcdsaWithAes256CbcSha => 0xc005,
+            Self::TlsEcdheEcdsaWithNullSha => 0xc006,
+            Self::TlsEcdheEcdsaWithRc4128Sha => 0xc007,
+            Self::TlsEcdheEcdsaWith3desEdeCbcSha => 0xc008,
+            Self::TlsEcdheEcdsaWithAes128CbcSha => 0xc009,
+            Self::TlsEcdheEcdsaWithAes256CbcSha => 0xc00a,
+            Self::TlsEcdhRsaWithNullSha => 0xc00b,
+            Self::TlsEcdhRsaWithRc4128Sha => 0xc00c,
+            Self::TlsEcdhRsaWith3desEdeCbcSha => 0xc00d,
+            Self::TlsEcdhRsaWithAes128CbcSha => 0xc00e,
+            Self::TlsEcdhRsaWithAes256CbcSha => 0xc00f,
+            Self::TlsEcdheRsaWithNullSha => 0xc010,
+            Self::TlsEcdheRsaWithRc4128Sha => 0xc011,
+            Self::TlsEcdheRsaWith3desEdeCbcSha => 0xc012,
+            Self::TlsEcdheRsaWithAes128CbcSha => 0xc013,
+            Self::TlsEcdheRsaWithAes256CbcSha => 0xc014,
+            Self::TlsEcdhAnonWithNullSha => 0xc015,
+            Self::TlsEcdhAnonWithRc4128Sha => 0xc016,
+            Self::TlsEcdhAnonWith3desEdeCbcSha => 0xc017,
+            Self::TlsEcdhAnonWithAes128CbcSha => 0xc018,
+            Self::TlsEcdhAnonWithAes256CbcSha => 0xc019,
+            Self::TlsEcdheEcdsaWithAes128CbcSha256 => 0xc023,
+            Self::TlsEcdheEcdsaWithAes256CbcSha384 => 0xc024,
+            Self::TlsEcdhEcdsaWithAes128CbcSha256 => 0xc025,
+            Self::TlsEcdhEcdsaWithAes256CbcSha384 => 0xc026,
+            Self::TlsEcdheRsaWithAes128CbcSha256 => 0xc027,
+            Self::TlsEcdheRsaWithAes256CbcSha384 => 0xc028,
+            Self::TlsEcdhRsaWithAes128CbcSha256 => 0xc029,
+            Self::TlsEcdhRsaWithAes256CbcSha384 => 0xc02a,
+            Self::TlsEcdheEcdsaWithAes128GcmSha256 => 0xc02b,
+            Self::TlsEcdheEcdsaWithAes256GcmSha384 => 0xc02c,
+            Self::TlsEcdhEcdsaWithAes128GcmSha256 => 0xc02d,
+            Self::TlsEcdhEcdsaWithAes256GcmSha384 => 0xc02e,
+            Self::TlsEcdheRsaWithAes128GcmSha256 => 0xc02f,
+            Self::TlsEcdheRsaWithAes256GcmSha384 => 0xc030,
+            Self::TlsEcdhRsaWithAes128GcmSha256 => 0xc031,
+            Self::TlsEcdhRsaWithAes256GcmSha384 => 0xc032,
+            Self::TlsEcdheRsaWithChaCha20Poly1305Sha256 => 0xcca8,
+            Self::TlsEcdheEcdsaWithChaCha20Poly1305Sha256 => 0xcca9,
+            Self::TlsDheRsaWithChaCha20Poly1305Sha256 => 0xccaa,
+            Self::Unknown(v) => v,
+        }
+    }
+
+    /// Get the hash length for this cipher suite
+    pub fn hash_length(self) -> usize {
+        match self {
+            // SHA-256 based suites
+            Self::Tls13Aes128GcmSha256
+            | Self::Tls13ChaCha20Poly1305Sha256
+            | Self::Tls13Aes128CcmSha256
+            | Self::Tls13Aes128Ccm8Sha256
+            | Self::TlsRsaWithAes128GcmSha256
+            | Self::TlsRsaWithAes128CbcSha256
+            | Self::TlsDheRsaWithAes128GcmSha256
+            | Self::TlsPskWithAes128GcmSha256
+            | Self::TlsEcdheEcdsaWithAes128CbcSha256
+            | Self::TlsEcdhEcdsaWithAes128CbcSha256
+            | Self::TlsEcdheRsaWithAes128CbcSha256
+            | Self::TlsEcdhRsaWithAes128CbcSha256
+            | Self::TlsEcdheEcdsaWithAes128GcmSha256
+            | Self::TlsEcdhEcdsaWithAes128GcmSha256
+            | Self::TlsEcdheRsaWithAes128GcmSha256
+            | Self::TlsEcdhRsaWithAes128GcmSha256
+            | Self::TlsEcdheRsaWithChaCha20Poly1305Sha256
+            | Self::TlsEcdheEcdsaWithChaCha20Poly1305Sha256
+            | Self::TlsDheRsaWithChaCha20Poly1305Sha256 => 32,
+            // SHA-384 based suites
+            Self::Tls13Aes256GcmSha384
+            | Self::TlsRsaWithAes256GcmSha384
+            | Self::TlsRsaWithAes256CbcSha256
+            | Self::TlsDheRsaWithAes256GcmSha384
+            | Self::TlsPskWithAes256GcmSha384
+            | Self::TlsEcdheEcdsaWithAes256CbcSha384
+            | Self::TlsEcdhEcdsaWithAes256CbcSha384
+            | Self::TlsEcdheRsaWithAes256CbcSha384
+            | Self::TlsEcdhRsaWithAes256CbcSha384
+            | Self::TlsEcdheEcdsaWithAes256GcmSha384
+            | Self::TlsEcdhEcdsaWithAes256GcmSha384
+            | Self::TlsEcdheRsaWithAes256GcmSha384
+            | Self::TlsEcdhRsaWithAes256GcmSha384 => 48,
+            // SHA-1 based suites
+            Self::TlsRsaWithNullSha
+            | Self::TlsRsaWithRc4128Sha
+            | Self::TlsRsaWithDesCbcSha
+            | Self::TlsRsaWith3desEdeCbcSha
+            | Self::TlsRsaWithAes128CbcSha
+            | Self::TlsRsaWithAes256CbcSha
+            | Self::TlsEcdheEcdsaWithAes128CbcSha
+            | Self::TlsEcdheEcdsaWithAes256CbcSha
+            | Self::TlsEcdheRsaWithAes128CbcSha
+            | Self::TlsEcdheRsaWithAes256CbcSha => 20,
+            // MD5 based suites
+            Self::TlsRsaWithNullMd5 | Self::TlsRsaWithRc4128Md5 => 16,
+            // Unknown defaults to SHA-256
+            Self::Unknown(_) => 32,
+            // Other suites default to SHA-256
+            _ => 32,
+        }
+    }
+
+    /// Get the key length and IV length for this cipher suite
+    ///
+    /// For TLS 1.2 AEAD suites, returns (key_len, salt_len) where salt_len is 4.
+    /// For TLS 1.3 suites, returns (key_len, iv_len) where iv_len is 12.
+    pub fn key_iv_length(self) -> (usize, usize) {
+        match self {
+            // TLS 1.3 AES-128-GCM (iv_len = 12)
+            Self::Tls13Aes128GcmSha256
+            | Self::Tls13Aes128CcmSha256
+            | Self::Tls13Aes128Ccm8Sha256 => (16, 12),
+            // TLS 1.3 AES-256-GCM (iv_len = 12)
+            Self::Tls13Aes256GcmSha384 => (32, 12),
+            // TLS 1.3 ChaCha20-Poly1305 (iv_len = 12)
+            // TLS 1.2 ChaCha20-Poly1305 (iv_len = 12)
+            Self::Tls13ChaCha20Poly1305Sha256
+            | Self::TlsEcdheRsaWithChaCha20Poly1305Sha256
+            | Self::TlsEcdheEcdsaWithChaCha20Poly1305Sha256
+            | Self::TlsDheRsaWithChaCha20Poly1305Sha256 => (32, 12),
+            // TLS 1.2 AES-128-GCM (salt_len = 4)
+            Self::TlsRsaWithAes128GcmSha256
+            | Self::TlsDheRsaWithAes128GcmSha256
+            | Self::TlsPskWithAes128GcmSha256
+            | Self::TlsEcdheEcdsaWithAes128GcmSha256
+            | Self::TlsEcdhEcdsaWithAes128GcmSha256
+            | Self::TlsEcdheRsaWithAes128GcmSha256
+            | Self::TlsEcdhRsaWithAes128GcmSha256 => (16, 4),
+            // TLS 1.2 AES-256-GCM (salt_len = 4)
+            Self::TlsRsaWithAes256GcmSha384
+            | Self::TlsDheRsaWithAes256GcmSha384
+            | Self::TlsPskWithAes256GcmSha384
+            | Self::TlsEcdheEcdsaWithAes256GcmSha384
+            | Self::TlsEcdhEcdsaWithAes256GcmSha384
+            | Self::TlsEcdheRsaWithAes256GcmSha384
+            | Self::TlsEcdhRsaWithAes256GcmSha384 => (32, 4),
+            // AES-128-CBC
+            Self::TlsRsaWithAes128CbcSha
+            | Self::TlsRsaWithAes128CbcSha256
+            | Self::TlsEcdheEcdsaWithAes128CbcSha
+            | Self::TlsEcdheEcdsaWithAes128CbcSha256
+            | Self::TlsEcdheRsaWithAes128CbcSha
+            | Self::TlsEcdheRsaWithAes128CbcSha256
+            | Self::TlsEcdhEcdsaWithAes128CbcSha
+            | Self::TlsEcdhEcdsaWithAes128CbcSha256
+            | Self::TlsEcdhRsaWithAes128CbcSha
+            | Self::TlsEcdhRsaWithAes128CbcSha256
+            | Self::TlsEcdhAnonWithAes128CbcSha => (16, 16),
+            // AES-256-CBC
+            Self::TlsRsaWithAes256CbcSha
+            | Self::TlsRsaWithAes256CbcSha256
+            | Self::TlsEcdheEcdsaWithAes256CbcSha
+            | Self::TlsEcdheEcdsaWithAes256CbcSha384
+            | Self::TlsEcdheRsaWithAes256CbcSha
+            | Self::TlsEcdheRsaWithAes256CbcSha384
+            | Self::TlsEcdhEcdsaWithAes256CbcSha
+            | Self::TlsEcdhEcdsaWithAes256CbcSha384
+            | Self::TlsEcdhRsaWithAes256CbcSha
+            | Self::TlsEcdhRsaWithAes256CbcSha384
+            | Self::TlsEcdhAnonWithAes256CbcSha => (32, 16),
+            // 3DES
+            Self::TlsRsaWith3desEdeCbcSha
+            | Self::TlsEcdheEcdsaWith3desEdeCbcSha
+            | Self::TlsEcdheRsaWith3desEdeCbcSha
+            | Self::TlsEcdhEcdsaWith3desEdeCbcSha
+            | Self::TlsEcdhRsaWith3desEdeCbcSha
+            | Self::TlsEcdhAnonWith3desEdeCbcSha => (24, 8),
+            // DES
+            Self::TlsRsaWithDesCbcSha => (8, 8),
+            // RC4
+            Self::TlsRsaWithRc4128Md5
+            | Self::TlsRsaWithRc4128Sha
+            | Self::TlsEcdheEcdsaWithRc4128Sha
+            | Self::TlsEcdheRsaWithRc4128Sha
+            | Self::TlsEcdhEcdsaWithRc4128Sha
+            | Self::TlsEcdhRsaWithRc4128Sha
+            | Self::TlsEcdhAnonWithRc4128Sha => (16, 0),
+            // NULL
+            Self::TlsNullWithNullNull
+            | Self::TlsRsaWithNullMd5
+            | Self::TlsRsaWithNullSha
+            | Self::TlsEcdheEcdsaWithNullSha
+            | Self::TlsEcdheRsaWithNullSha
+            | Self::TlsEcdhEcdsaWithNullSha
+            | Self::TlsEcdhRsaWithNullSha
+            | Self::TlsEcdhAnonWithNullSha => (0, 0),
+            // SCSV (Signaling Cipher Suite Value) - not a real cipher
+            Self::TlsEmptyRenegotiationInfoScsv => (0, 0),
+            // Unknown defaults to AES-128-GCM
+            Self::Unknown(_) => (16, 12),
+        }
+    }
+
+    /// Check if this is a TLS 1.3 cipher suite
+    pub fn is_tls13(self) -> bool {
+        matches!(
+            self,
+            Self::Tls13Aes128GcmSha256
+                | Self::Tls13Aes256GcmSha384
+                | Self::Tls13ChaCha20Poly1305Sha256
+                | Self::Tls13Aes128CcmSha256
+                | Self::Tls13Aes128Ccm8Sha256
+        )
+    }
+
+    /// Check if this is an AEAD cipher suite
+    pub fn is_aead(self) -> bool {
+        matches!(
+            self,
+            Self::Tls13Aes128GcmSha256
+                | Self::Tls13Aes256GcmSha384
+                | Self::Tls13ChaCha20Poly1305Sha256
+                | Self::Tls13Aes128CcmSha256
+                | Self::Tls13Aes128Ccm8Sha256
+                | Self::TlsRsaWithAes128GcmSha256
+                | Self::TlsRsaWithAes256GcmSha384
+                | Self::TlsDheRsaWithAes128GcmSha256
+                | Self::TlsDheRsaWithAes256GcmSha384
+                | Self::TlsPskWithAes128GcmSha256
+                | Self::TlsPskWithAes256GcmSha384
+                | Self::TlsEcdheEcdsaWithAes128GcmSha256
+                | Self::TlsEcdheEcdsaWithAes256GcmSha384
+                | Self::TlsEcdhEcdsaWithAes128GcmSha256
+                | Self::TlsEcdhEcdsaWithAes256GcmSha384
+                | Self::TlsEcdheRsaWithAes128GcmSha256
+                | Self::TlsEcdheRsaWithAes256GcmSha384
+                | Self::TlsEcdhRsaWithAes128GcmSha256
+                | Self::TlsEcdhRsaWithAes256GcmSha384
+                | Self::TlsEcdheRsaWithChaCha20Poly1305Sha256
+                | Self::TlsEcdheEcdsaWithChaCha20Poly1305Sha256
+                | Self::TlsDheRsaWithChaCha20Poly1305Sha256
+        )
+    }
+
+    /// Get the authentication tag length for this cipher suite
+    ///
+    /// Returns 0 for non-AEAD cipher suites.
+    pub fn tag_length(self) -> usize {
+        match self {
+            // AES-GCM and ChaCha20-Poly1305 use 16-byte tags
+            Self::Tls13Aes128GcmSha256
+            | Self::Tls13Aes256GcmSha384
+            | Self::Tls13ChaCha20Poly1305Sha256
+            | Self::TlsRsaWithAes128GcmSha256
+            | Self::TlsRsaWithAes256GcmSha384
+            | Self::TlsDheRsaWithAes128GcmSha256
+            | Self::TlsDheRsaWithAes256GcmSha384
+            | Self::TlsPskWithAes128GcmSha256
+            | Self::TlsPskWithAes256GcmSha384
+            | Self::TlsEcdheEcdsaWithAes128GcmSha256
+            | Self::TlsEcdheEcdsaWithAes256GcmSha384
+            | Self::TlsEcdhEcdsaWithAes128GcmSha256
+            | Self::TlsEcdhEcdsaWithAes256GcmSha384
+            | Self::TlsEcdheRsaWithAes128GcmSha256
+            | Self::TlsEcdheRsaWithAes256GcmSha384
+            | Self::TlsEcdhRsaWithAes128GcmSha256
+            | Self::TlsEcdhRsaWithAes256GcmSha384
+            | Self::TlsEcdheRsaWithChaCha20Poly1305Sha256
+            | Self::TlsEcdheEcdsaWithChaCha20Poly1305Sha256
+            | Self::TlsDheRsaWithChaCha20Poly1305Sha256 => 16,
+            // AES-128-CCM uses 16-byte tag
+            Self::Tls13Aes128CcmSha256 => 16,
+            // AES-128-CCM-8 uses 8-byte tag
+            Self::Tls13Aes128Ccm8Sha256 => 8,
+            // Non-AEAD suites return 0
+            _ => 0,
+        }
+    }
+
+    /// Check if this cipher suite needs explicit nonce (TLS 1.2 AEAD)
+    ///
+    /// TLS 1.2 AEAD suites (GCM/CCM) prepend 8-byte explicit nonce to ciphertext.
+    /// TLS 1.3 suites and TLS 1.2 ChaCha20-Poly1305 do not need explicit nonce.
+    pub fn needs_explicit_nonce(self) -> bool {
+        // Only TLS 1.2 GCM/CCM suites need explicit nonce
+        // TLS 1.2 ChaCha20-Poly1305 (RFC 7905) does not use explicit nonce
+        matches!(
+            self,
+            Self::TlsRsaWithAes128GcmSha256
+                | Self::TlsRsaWithAes256GcmSha384
+                | Self::TlsDheRsaWithAes128GcmSha256
+                | Self::TlsDheRsaWithAes256GcmSha384
+                | Self::TlsPskWithAes128GcmSha256
+                | Self::TlsPskWithAes256GcmSha384
+                | Self::TlsEcdheEcdsaWithAes128GcmSha256
+                | Self::TlsEcdheEcdsaWithAes256GcmSha384
+                | Self::TlsEcdhEcdsaWithAes128GcmSha256
+                | Self::TlsEcdhEcdsaWithAes256GcmSha384
+                | Self::TlsEcdheRsaWithAes128GcmSha256
+                | Self::TlsEcdheRsaWithAes256GcmSha384
+                | Self::TlsEcdhRsaWithAes128GcmSha256
+                | Self::TlsEcdhRsaWithAes256GcmSha384
+                | Self::Tls13Aes128CcmSha256
+                | Self::Tls13Aes128Ccm8Sha256
+        )
+    }
+
+    /// Get the TLS version for this cipher suite
+    pub fn version(self) -> TlsVersion {
+        if self.is_tls13() {
+            TlsVersion::Tls13
+        } else {
+            TlsVersion::Tls12
+        }
+    }
+}
+
+impl From<TlsCipherSuiteID> for CipherSuite {
+    fn from(id: TlsCipherSuiteID) -> Self {
+        CipherSuite::from_u16(id.into())
+    }
+}
+
+impl From<CipherSuite> for TlsCipherSuiteID {
+    fn from(suite: CipherSuite) -> Self {
+        TlsCipherSuiteID(suite.to_u16())
+    }
+}
+
+// ============================================================================
+// Unit tests for CipherSuite
+// ============================================================================
+
+#[cfg(test)]
+mod cipher_suite_tests {
+    use super::*;
+
+    #[test]
+    fn test_cipher_suite_from_u16() {
+        assert_eq!(
+            CipherSuite::from_u16(0x1301),
+            CipherSuite::Tls13Aes128GcmSha256
+        );
+        assert_eq!(
+            CipherSuite::from_u16(0x1302),
+            CipherSuite::Tls13Aes256GcmSha384
+        );
+        assert_eq!(
+            CipherSuite::from_u16(0x1303),
+            CipherSuite::Tls13ChaCha20Poly1305Sha256
+        );
+        assert_eq!(
+            CipherSuite::from_u16(0xcca8),
+            CipherSuite::TlsEcdheRsaWithChaCha20Poly1305Sha256
+        );
+        assert!(matches!(
+            CipherSuite::from_u16(0xffff),
+            CipherSuite::Unknown(0xffff)
+        ));
+    }
+
+    #[test]
+    fn test_cipher_suite_to_u16() {
+        assert_eq!(CipherSuite::Tls13Aes128GcmSha256.to_u16(), 0x1301);
+        assert_eq!(CipherSuite::Tls13Aes256GcmSha384.to_u16(), 0x1302);
+        assert_eq!(CipherSuite::Tls13ChaCha20Poly1305Sha256.to_u16(), 0x1303);
+        assert_eq!(
+            CipherSuite::TlsEcdheRsaWithChaCha20Poly1305Sha256.to_u16(),
+            0xcca8
+        );
+        assert_eq!(CipherSuite::Unknown(0xffff).to_u16(), 0xffff);
+    }
+
+    #[test]
+    fn test_cipher_suite_hash_length() {
+        assert_eq!(CipherSuite::Tls13Aes128GcmSha256.hash_length(), 32);
+        assert_eq!(CipherSuite::Tls13ChaCha20Poly1305Sha256.hash_length(), 32);
+        assert_eq!(CipherSuite::Tls13Aes256GcmSha384.hash_length(), 48);
+    }
+
+    #[test]
+    fn test_cipher_suite_key_iv_length() {
+        assert_eq!(CipherSuite::Tls13Aes128GcmSha256.key_iv_length(), (16, 12));
+        assert_eq!(CipherSuite::Tls13Aes256GcmSha384.key_iv_length(), (32, 12));
+        assert_eq!(
+            CipherSuite::Tls13ChaCha20Poly1305Sha256.key_iv_length(),
+            (32, 12)
+        );
+    }
+
+    #[test]
+    fn test_cipher_suite_is_tls13() {
+        assert!(CipherSuite::Tls13Aes128GcmSha256.is_tls13());
+        assert!(CipherSuite::Tls13ChaCha20Poly1305Sha256.is_tls13());
+        assert!(!CipherSuite::TlsEcdheRsaWithChaCha20Poly1305Sha256.is_tls13());
+    }
+
+    #[test]
+    fn test_cipher_suite_is_aead() {
+        assert!(CipherSuite::Tls13Aes128GcmSha256.is_aead());
+        assert!(CipherSuite::Tls13ChaCha20Poly1305Sha256.is_aead());
+        assert!(CipherSuite::TlsEcdheRsaWithChaCha20Poly1305Sha256.is_aead());
+        assert!(!CipherSuite::TlsRsaWithAes128CbcSha.is_aead());
+    }
+
+    #[test]
+    fn test_cipher_suite_conversion_with_tls_parser() {
+        let id = TlsCipherSuiteID(0x1301);
+        let suite: CipherSuite = id.into();
+        assert_eq!(suite, CipherSuite::Tls13Aes128GcmSha256);
+
+        let back: TlsCipherSuiteID = suite.into();
+        assert_eq!(back, TlsCipherSuiteID(0x1301));
+    }
+}
+
+// ============================================================================
+// Unit tests for CurveType
+// ============================================================================
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_curve_type_from_u16() {
+        assert_eq!(CurveType::from_u16(0x0017), Some(CurveType::Secp256r1));
+        assert_eq!(CurveType::from_u16(0x0018), Some(CurveType::Secp384r1));
+        assert_eq!(CurveType::from_u16(0x0019), Some(CurveType::Secp521r1));
+        assert_eq!(CurveType::from_u16(0x001D), Some(CurveType::X25519));
+        assert_eq!(CurveType::from_u16(0x001E), Some(CurveType::X448));
+        assert_eq!(CurveType::from_u16(0x0000), None);
+    }
+
+    #[test]
+    fn test_curve_type_to_u16() {
+        assert_eq!(CurveType::Secp256r1.to_u16(), 0x0017);
+        assert_eq!(CurveType::Secp384r1.to_u16(), 0x0018);
+        assert_eq!(CurveType::Secp521r1.to_u16(), 0x0019);
+        assert_eq!(CurveType::X25519.to_u16(), 0x001D);
+        assert_eq!(CurveType::X448.to_u16(), 0x001E);
+    }
+
+    #[test]
+    fn test_curve_type_key_share_length() {
+        assert_eq!(CurveType::Secp256r1.key_share_length(), 65);
+        assert_eq!(CurveType::Secp384r1.key_share_length(), 97);
+        assert_eq!(CurveType::Secp521r1.key_share_length(), 133);
+        assert_eq!(CurveType::X25519.key_share_length(), 32);
+        assert_eq!(CurveType::X448.key_share_length(), 56);
+    }
+
+    #[test]
+    fn test_curve_type_shared_secret_length() {
+        assert_eq!(CurveType::Secp256r1.shared_secret_length(), 32);
+        assert_eq!(CurveType::Secp384r1.shared_secret_length(), 48);
+        assert_eq!(CurveType::Secp521r1.shared_secret_length(), 66);
+        assert_eq!(CurveType::X25519.shared_secret_length(), 32);
+        assert_eq!(CurveType::X448.shared_secret_length(), 56);
+    }
+
+    #[test]
+    fn test_curve_type_private_key_length() {
+        assert_eq!(CurveType::Secp256r1.private_key_length(), 32);
+        assert_eq!(CurveType::Secp384r1.private_key_length(), 48);
+        assert_eq!(CurveType::Secp521r1.private_key_length(), 66);
+        assert_eq!(CurveType::X25519.private_key_length(), 32);
+        assert_eq!(CurveType::X448.private_key_length(), 56);
+    }
+
+    #[test]
+    fn test_curve_type_public_key_lengths() {
+        // P-256
+        assert_eq!(CurveType::Secp256r1.public_key_uncompressed_length(), 65);
+        assert_eq!(CurveType::Secp256r1.public_key_compressed_length(), 33);
+        assert!(CurveType::Secp256r1.is_valid_public_key_length(65));
+        assert!(CurveType::Secp256r1.is_valid_public_key_length(33));
+        assert!(!CurveType::Secp256r1.is_valid_public_key_length(64));
+
+        // P-384
+        assert_eq!(CurveType::Secp384r1.public_key_uncompressed_length(), 97);
+        assert_eq!(CurveType::Secp384r1.public_key_compressed_length(), 49);
+        assert!(CurveType::Secp384r1.is_valid_public_key_length(97));
+        assert!(CurveType::Secp384r1.is_valid_public_key_length(49));
+
+        // P-521
+        assert_eq!(CurveType::Secp521r1.public_key_uncompressed_length(), 133);
+        assert_eq!(CurveType::Secp521r1.public_key_compressed_length(), 67);
+        assert!(CurveType::Secp521r1.is_valid_public_key_length(133));
+        assert!(CurveType::Secp521r1.is_valid_public_key_length(67));
+
+        // X25519 (no compression, same length)
+        assert_eq!(CurveType::X25519.public_key_uncompressed_length(), 32);
+        assert_eq!(CurveType::X25519.public_key_compressed_length(), 32);
+        assert!(CurveType::X25519.is_valid_public_key_length(32));
+        assert!(!CurveType::X25519.is_valid_public_key_length(33));
+
+        // X448 (no compression, same length)
+        assert_eq!(CurveType::X448.public_key_uncompressed_length(), 56);
+        assert_eq!(CurveType::X448.public_key_compressed_length(), 56);
+        assert!(CurveType::X448.is_valid_public_key_length(56));
+        assert!(!CurveType::X448.is_valid_public_key_length(57));
+    }
+
+    #[test]
+    fn test_curve_type_is_valid_private_key_length() {
+        assert!(CurveType::Secp256r1.is_valid_private_key_length(32));
+        assert!(!CurveType::Secp256r1.is_valid_private_key_length(31));
+        assert!(!CurveType::Secp256r1.is_valid_private_key_length(33));
+
+        assert!(CurveType::Secp384r1.is_valid_private_key_length(48));
+        assert!(!CurveType::Secp384r1.is_valid_private_key_length(47));
+
+        // P-521 supports both 65 and 66 byte private keys
+        // 65 bytes when the leading bit is 0, 66 bytes otherwise
+        assert!(CurveType::Secp521r1.is_valid_private_key_length(66));
+        assert!(CurveType::Secp521r1.is_valid_private_key_length(65));
+        assert!(!CurveType::Secp521r1.is_valid_private_key_length(64));
+
+        assert!(CurveType::X25519.is_valid_private_key_length(32));
+        assert!(!CurveType::X25519.is_valid_private_key_length(31));
+
+        assert!(CurveType::X448.is_valid_private_key_length(56));
+        assert!(!CurveType::X448.is_valid_private_key_length(55));
     }
 }

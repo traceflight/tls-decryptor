@@ -1,0 +1,124 @@
+{
+  "version": "1.0",
+  "description": "Test vectors for TLS cipher decryption",
+  "tls13_tests": {
+    "aes_128_gcm_basic": {
+      "description": "TLS 1.3 AES-128-GCM basic decryption test",
+      "tls_version": "1.3",
+      "cipher_suite": "TLS_AES_128_GCM_SHA256",
+      "cipher_suite_id": "0x1301",
+      "key": "a4498d4d5464a6f79cecf2cd8967b896",
+      "iv": "9d87f3556a6601cf45bcabb3",
+      "plaintext": "48656c6c6f2c20544c5320312e33204145532d3132382d47434d21",
+      "aad": "170303002c",
+      "sequence_number": 0,
+      "ciphertext": "640585938f9de7f504148a8039c8170c5d51f08837040c90a09a03",
+      "tag": "c20daf79ba896ffad015d142b3b5b6dc",
+      "full_ciphertext": "640585938f9de7f504148a8039c8170c5d51f08837040c90a09a03c20daf79ba896ffad015d142b3b5b6dc"
+    },
+    "aes_256_gcm_basic": {
+      "description": "TLS 1.3 AES-256-GCM basic decryption test",
+      "tls_version": "1.3",
+      "cipher_suite": "TLS_AES_256_GCM_SHA384",
+      "cipher_suite_id": "0x1302",
+      "key": "7c6b216701090374b5d473fb65d7be66ba04b5da921a744a4e15b54a1efb5a95",
+      "iv": "7183c6cebed64f9f7ef743b0",
+      "plaintext": "48656c6c6f2c20544c5320312e33204145532d3235362d47434d21",
+      "aad": "170303002c",
+      "sequence_number": 0,
+      "ciphertext": "601734c64ed8844a4188878954be6723065f1f23c9d03bc260743f",
+      "tag": "8ace95fd5f3b161cabab35bda4a14776",
+      "full_ciphertext": "601734c64ed8844a4188878954be6723065f1f23c9d03bc260743f8ace95fd5f3b161cabab35bda4a14776"
+    },
+    "chacha20_poly1305_basic": {
+      "description": "TLS 1.3 ChaCha20-Poly1305 basic decryption test",
+      "tls_version": "1.3",
+      "cipher_suite": "TLS_CHACHA20_POLY1305_SHA256",
+      "cipher_suite_id": "0x1303",
+      "key": "1e5437171a1807f71297581457874502834672c32aa5f1163bcf2b4c237266ee",
+      "iv": "927e5a952e7f9254eb97ddd6",
+      "plaintext": "48656c6c6f2c20544c5320312e332043686143686132302d506f6c793133303521",
+      "aad": "1703030032",
+      "sequence_number": 0,
+      "ciphertext": "6578916b8f0dfbbdfaf2df99e2095a48b5fe0f6ca50fb40c4d44663e47806a1a72",
+      "tag": "e19b6d49f3139e6c575f61f1e69ad285",
+      "full_ciphertext": "6578916b8f0dfbbdfaf2df99e2095a48b5fe0f6ca50fb40c4d44663e47806a1a72e19b6d49f3139e6c575f61f1e69ad285"
+    }
+  },
+  "tls12_tests": {
+    "rsa_aes_128_gcm_basic": {
+      "description": "TLS 1.2 RSA AES-128-GCM basic decryption test",
+      "tls_version": "1.2",
+      "cipher_suite": "TLS_RSA_WITH_AES_128_GCM_SHA256",
+      "cipher_suite_id": "0x009C",
+      "key": "0621b262dccd5d443d7c67e2602f0774",
+      "salt": "03f29cc6",
+      "plaintext": "48656c6c6f2c20544c5320312e3220525341204145532d3132382d47434d21",
+      "aad": "1703030037",
+      "sequence_number": 0,
+      "explicit_nonce": "0000000000000000",
+      "ciphertext": "68c02b96163aab3c1db221857c62249029dcb096d9bbb63fc1f37f34c3f5fb",
+      "tag": "fa2b5ad6b271c180061c7bc8cb475cea",
+      "full_ciphertext": "000000000000000068c02b96163aab3c1db221857c62249029dcb096d9bbb63fc1f37f34c3f5fbfa2b5ad6b271c180061c7bc8cb475cea"
+    },
+    "rsa_aes_256_gcm_basic": {
+      "description": "TLS 1.2 RSA AES-256-GCM basic decryption test",
+      "tls_version": "1.2",
+      "cipher_suite": "TLS_RSA_WITH_AES_256_GCM_SHA384",
+      "cipher_suite_id": "0x009D",
+      "key": "cc8d96c9e83cf0ff3db902e88f1610d7c8db404a1e89d8b9e4e235b930882cdc",
+      "salt": "4beb4cf2",
+      "plaintext": "48656c6c6f2c20544c5320312e3220525341204145532d3235362d47434d21",
+      "aad": "1703030037",
+      "sequence_number": 0,
+      "explicit_nonce": "0000000000000000",
+      "ciphertext": "7c7f169ceff04614337abb9173a80a4733c94dcd05d4844fd7572d4d1be12c",
+      "tag": "75af49efa3737e2dbf9218d61704f97f",
+      "full_ciphertext": "00000000000000007c7f169ceff04614337abb9173a80a4733c94dcd05d4844fd7572d4d1be12c75af49efa3737e2dbf9218d61704f97f"
+    },
+    "ecdhe_chacha20_poly1305_basic": {
+      "description": "TLS 1.2 ECDHE ChaCha20-Poly1305 basic decryption test",
+      "tls_version": "1.2",
+      "cipher_suite": "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256",
+      "cipher_suite_id": "0xCCA8",
+      "key": "4935bdf7cf7e2556e726f99681d7ae3e97f302efb1e95856f395a13cd4042f06",
+      "iv": "6a7ac4936f65dc9717fcff04",
+      "plaintext": "48656c6c6f2c20544c5320312e322045434448452043686143686132302d506f6c793133303521",
+      "aad": "1703030037",
+      "sequence_number": 0,
+      "ciphertext": "e19e647ba195705d2bbc3b81c4b211eacade62ec813d2909a8beb79bf0e234a52aff45708c4346",
+      "tag": "422a4ca7f699a67ace6e68dcd9870eca",
+      "full_ciphertext": "e19e647ba195705d2bbc3b81c4b211eacade62ec813d2909a8beb79bf0e234a52aff45708c4346422a4ca7f699a67ace6e68dcd9870eca"
+    }
+  },
+  "advanced_tests": {
+    "sequence_number_test": {
+      "description": "TLS 1.3 AES-128-GCM with non-zero sequence number",
+      "tls_version": "1.3",
+      "cipher_suite": "TLS_AES_128_GCM_SHA256",
+      "cipher_suite_id": "0x1301",
+      "key": "a4498d4d5464a6f79cecf2cd8967b896",
+      "iv": "9d87f3556a6601cf45bcabb3",
+      "plaintext": "53657175656e6365206e756d6265722074657374206d657373616765",
+      "aad": "1703030021",
+      "sequence_number": 100,
+      "ciphertext": "b75f48048ee7d2c23b39c4f6a88de55ac0c5942adc7c402b1b852558",
+      "tag": "0740d8fe60073b9e9854bd5a90508557",
+      "full_ciphertext": "b75f48048ee7d2c23b39c4f6a88de55ac0c5942adc7c402b1b8525580740d8fe60073b9e9854bd5a90508557"
+    },
+    "edge_cases": {
+      "empty_plaintext": {
+        "description": "Empty plaintext decryption test",
+        "tls_version": "1.3",
+        "cipher_suite": "TLS_AES_128_GCM_SHA256",
+        "cipher_suite_id": "0x1301",
+        "key": "a4498d4d5464a6f79cecf2cd8967b896",
+        "iv": "9d87f3556a6601cf45bcabb3",
+        "plaintext": "",
+        "aad": "1703030010",
+        "sequence_number": 0,
+        "full_ciphertext": "2a686dd3fab87fdcddb6a36711ef5f91"
+      }
+    }
+  }
+}

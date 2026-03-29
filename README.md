@@ -20,6 +20,13 @@ Without the corresponding private key, this library cannot derive the session ke
 - 🧩 Extensible cipher suite architecture
 - ✅ Comprehensive test coverage with test data verified by Python scripts
 
+## Dependencies
+
+This project is built upon:
+
+- **[RustCrypto](https://github.com/rustcrypto/)** - Provides cryptographic algorithms used throughout the library
+- **[tls-parser](https://crates.io/crates/tls-parser) ([GitHub](https://github.com/rusticata/tls-parser))** - Provides TLS record parsing capabilities
+
 ## Supported Cipher Suites
 
 ### TLS 1.2

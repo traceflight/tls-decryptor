@@ -1,0 +1,48 @@
+{
+  "version": "1.0",
+  "description": "Test vectors for TLS 1.2 key derivation",
+  "key_derivation_tests": {
+    "aes_128_gcm": {
+      "description": "TLS 1.2 RSA WITH AES 128 GCM SHA256",
+      "tls_version": "1.2",
+      "cipher_suite": "TLS_RSA_WITH_AES_128_GCM_SHA256",
+      "cipher_suite_id": "0x009C",
+      "client_random": "20bdc2efb8386b8b00594c755b4f9e2d0a9e9c7f5e8d3c2b1a0f9e8d7c6b5a49",
+      "server_random": "35c5e5f5a5b5c5d5e5f505152535455565758595a5b5c5d5e5f5051525354555",
+      "pre_master_secret": "03030102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f",
+      "master_secret": "67a0493a7cc90da65f725ac7e78daccb33ba383d180a22e30fbd3294e46ca51433ce62ac53bb035c0939a27053813d80",
+      "client_write_key": "0939fc1bd3c885590895b51b0fa70bd6",
+      "server_write_key": "1ce80cca0f5bcc65fb7620dcf38d45df",
+      "client_write_iv": "415f2821",
+      "server_write_iv": "6ca2a704"
+    },
+    "aes_256_gcm": {
+      "description": "TLS 1.2 RSA WITH AES 256 GCM SHA384",
+      "tls_version": "1.2",
+      "cipher_suite": "TLS_RSA_WITH_AES_256_GCM_SHA384",
+      "cipher_suite_id": "0x009D",
+      "client_random": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899",
+      "server_random": "112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00",
+      "pre_master_secret": "0303deadbeefcafebabe0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a",
+      "master_secret": "dc532dd614416223473000d54e1e9726b5be2d161bb35a8911fab90ab9c0a75a222bd3282786cf2dab306b84a79397b7",
+      "client_write_key": "3742e1e0b061a9904c3e3897fffe348e2c067ac1766af522504d1029ba4d4764",
+      "server_write_key": "251cf9bb2e70a636d47817402222ad98477a0e176bf0d491aeb620f64cfe269f",
+      "client_write_iv": "c198ae26",
+      "server_write_iv": "5222887a"
+    }
+  },
+  "state_machine_tests": {
+    "basic_flow": {
+      "description": "TLS 1.2 Key Deriver State Machine Test",
+      "client_random": "20bdc2efb8386b8b00594c755b4f9e2d0a9e9c7f5e8d3c2b1a0f9e8d7c6b5a49",
+      "server_random": "35c5e5f5a5b5c5d5e5f505152535455565758595a5b5c5d5e5f5051525354555",
+      "cipher_suite_id": "0x009C",
+      "pre_master_secret": "03030102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f",
+      "expected_master_secret": "67a0493a7cc90da65f725ac7e78daccb33ba383d180a22e30fbd3294e46ca51433ce62ac53bb035c0939a27053813d80",
+      "expected_client_write_key": "0939fc1bd3c885590895b51b0fa70bd6",
+      "expected_server_write_key": "1ce80cca0f5bcc65fb7620dcf38d45df",
+      "expected_client_write_iv": "415f2821",
+      "expected_server_write_iv": "6ca2a704"
+    }
+  }
+}

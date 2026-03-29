@@ -1,6 +1,6 @@
 [package]
 name = "tls-decryptor"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 description = "TLS 1.2 and TLS 1.3 Application Data record decryption utility library"
 license = "MIT OR Apache-2.0"
@@ -17,13 +17,16 @@ chacha20poly1305 = "0.10.1"
 hkdf = "0.12.4"
 hmac = "0.12.1"
 once_cell = "1.21.4"
-p256 = "0.13.2"
-p384 = "0.13.1"
+p256 = { version = "0.13.2", features = ["ecdh", "arithmetic"] }
+p384 = { version = "0.13.1", features = ["ecdh", "arithmetic"] }
+p521 = { version = "0.13.3", features = ["ecdh", "arithmetic"] }
+x25519-dalek = { version = "2.0.1", features = ["static_secrets"] }
 pem = "3.0.6"
 rsa = "0.9.10"
-rustls = "0.23.37"
 sha2 = "0.10.9"
 thiserror = "2.0.18"
+tls-parser = "0.12.2"
 
 [dev-dependencies]
 hex-literal = "1.1.0"
+rand = "0.8.5"

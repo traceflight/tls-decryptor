@@ -1,11 +1,10 @@
 //! TLS13_AES_128_GCM_SHA256 (0x1301) cipher suite implementation
 
 use aes_gcm::{AeadInPlace, Aes128Gcm, KeyInit, Nonce, Tag};
-use rustls::CipherSuite;
 
 use crate::cipher::trait_def::CipherContext;
 use crate::error::{DecryptError, Result};
-use crate::types::TlsVersion;
+use crate::types::CipherSuite;
 
 use super::aead_common::{build_tls13_nonce, split_ciphertext_and_tag};
 
@@ -14,27 +13,7 @@ pub struct Tls13Aes128GcmSha256;
 
 impl CipherContext for Tls13Aes128GcmSha256 {
     fn suite(&self) -> CipherSuite {
-        CipherSuite::TLS13_AES_128_GCM_SHA256
-    }
-
-    fn version(&self) -> TlsVersion {
-        TlsVersion::Tls13
-    }
-
-    fn key_length(&self) -> usize {
-        16
-    }
-
-    fn iv_length(&self) -> usize {
-        12
-    }
-
-    fn tag_length(&self) -> usize {
-        16
-    }
-
-    fn needs_explicit_nonce(&self) -> bool {
-        false
+        CipherSuite::Tls13Aes128GcmSha256
     }
 
     fn decrypt(
@@ -91,7 +70,7 @@ mod tests {
     #[test]
     fn test_suite_id() {
         let cipher = Tls13Aes128GcmSha256;
-        assert_eq!(cipher.suite(), CipherSuite::TLS13_AES_128_GCM_SHA256);
+        assert_eq!(cipher.suite(), CipherSuite::Tls13Aes128GcmSha256);
     }
 
     #[test]

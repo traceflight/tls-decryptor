@@ -1,8 +1,7 @@
 //! CipherContext trait definition
 
 use crate::error::Result;
-use crate::types::TlsVersion;
-use rustls::CipherSuite;
+use crate::types::{CipherSuite, TlsVersion};
 
 /// Cipher context trait - implemented by each cipher suite
 ///
@@ -13,19 +12,39 @@ pub trait CipherContext: Send + Sync {
     fn suite(&self) -> CipherSuite;
 
     /// Returns the TLS version
-    fn version(&self) -> TlsVersion;
+    ///
+    /// Default implementation delegates to `CipherSuite::version()`.
+    fn version(&self) -> TlsVersion {
+        self.suite().version()
+    }
 
     /// Returns the key length in bytes
-    fn key_length(&self) -> usize;
+    ///
+    /// Default implementation delegates to `CipherSuite::key_iv_length()`.
+    fn key_length(&self) -> usize {
+        self.suite().key_iv_length().0
+    }
 
     /// Returns the IV length in bytes
-    fn iv_length(&self) -> usize;
+    ///
+    /// Default implementation delegates to `CipherSuite::key_iv_length()`.
+    fn iv_length(&self) -> usize {
+        self.suite().key_iv_length().1
+    }
 
     /// Returns the authentication tag length in bytes, non-AEAD returns 0
-    fn tag_length(&self) -> usize;
+    ///
+    /// Default implementation delegates to `CipherSuite::tag_length()`.
+    fn tag_length(&self) -> usize {
+        self.suite().tag_length()
+    }
 
     /// Whether explicit nonce is needed (TLS 1.2 AEAD)
-    fn needs_explicit_nonce(&self) -> bool;
+    ///
+    /// Default implementation delegates to `CipherSuite::needs_explicit_nonce()`.
+    fn needs_explicit_nonce(&self) -> bool {
+        self.suite().needs_explicit_nonce()
+    }
 
     /// Decrypt data
     ///

@@ -1,0 +1,84 @@
+{
+  "version": "1.0",
+  "description": "Test vectors for TLS decryptor util module",
+  "ecdhe_test_vectors": {
+    "p256": {
+      "curve": "P-256",
+      "curve_id": "0x0017",
+      "server_private_key": "c6ef9e8f2a5b6d4c8e3f7a1b9c4d2e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9bacbd",
+      "client_private_key": "1a2b3c4d5e6f7a8b9cadbecfd0e1f2031425364758697a8b9cadbecff0011223",
+      "server_public_key": "043dce263ba2b3ad8a0f459aa7be69cf91a636eefc7c7e4286e76a639b9773e58210bc1738dc606004d4fc468b8899d713df880c5cbc024844968a2066a5358362",
+      "client_public_key": "04d5ec2343dc862394605aeb2a8c960c12b855d6a2a424df7d035cc11990d50f5f40be909491e3cef8981b3d67bd9c431b928679ed3758a514eaa362a426518307",
+      "shared_secret": "56428fa6f094ef2899a4d95845ea7e3742c1a2401d253906c2ca8cc40f3a9cbe",
+      "shared_secret_length": 32
+    },
+    "p384": {
+      "curve": "P-384",
+      "curve_id": "0x0018",
+      "server_private_key": "123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0",
+      "client_private_key": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+      "server_public_key": "04451bd008677acd4f4e7d06104e7a159b04e909462702311c4faf651dd296fd2c1c5e9ca50409fe096a000f9e70edca1b1b525e6249b6a88bc95dc85abf0ee546823646301177e43954be5eb75a4e7da7bbe73d942aa4c6125724cf2cdfdeac89",
+      "client_public_key": "048b40a2bbce88083e8b8f35219c6b5e35782995ea3fa4ce48b6c7bb0ce65b808dc74a24531e60e080c95c3321ba2228a1e5aedeb6d5234e00d257a4f6cb95a47feade17e88ad881c35c65a1b83af5d3c14f973699132a58b6f5009405f96fc7fc",
+      "shared_secret": "d5e089ffa166493087a15482c3229ec73ea61e523f03f7b0ff6e4187cb4bf25818da2cd3183acbb65efc3de6c0262047",
+      "shared_secret_length": 48
+    },
+    "p521": {
+      "curve": "P-521",
+      "curve_id": "0x0019",
+      "server_private_key": "012323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323",
+      "client_private_key": "014545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545454545",
+      "server_public_key": "040192b2ac67d1317af96ab591543ca688714f5348c279882502a08bc23bb52293bb3c65243879fd98f17c281232492081caad767a58e346aebb40a5388a2fcacb1959010eedda2eae4e73f0e7d3a199f9c6ce7b20919ca29de3a4b220a5a01c777332ca69a86d6ee55cd51bb16c17df87dde146fca5205f5b9f3789a2b8f57494318c9771",
+      "client_public_key": "0401d8c74012eed87484ad95d93e1d53c2b7990f978d904b71c1e27044b0707e516e3db3e47ceda630c1a4c07ad1c6b058f066e95e05ddd0c8a3eaba9a7f8b2dc1744000bf43a623f766e496fb656065ee227374054ae0ba65c6bc40bda75f9fa6b636a238f8532556c4153b75cc8a040bf7d0f86932574195816af293f19e722c43b25301",
+      "shared_secret": "0061237b0cb4d7b5e20062547decaa2b44a8107a97cdb0960b730559388b5b80de2a4c336acfc2b3a50ecaf99d26f50ce4be6400ccdca1c2bf01358ecb4d407aa3a5",
+      "shared_secret_length": 66,
+      "private_key_length": 66
+    },
+    "p521_65byte": {
+      "curve": "P-521-65",
+      "curve_id": "0x0019",
+      "server_private_key": "00abababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababab",
+      "client_private_key": "00cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+      "server_public_key": "04000797f33a4012c4db27f212832c1b5b983cb124825fcdda5c6584bd7346d1a4bb22711dc36abfe00fc17bef374f0ac415c89e415b242f1694f52c3bdb9bc6b2fd59015a1e66b3b7a79eb6a44f746b3efe419daea17291df69cb4b217eb11d77fb7113f5e69d691f86f8990ed64991fd7db62b1dc3513a813de85fed5d3f07b6ff5b7867",
+      "client_public_key": "04014ed8f5f7a1c2eb41a2008ed31cd7847f32a07edd5151fd9346b9ae184bb471ab9318582a9bf57ec5ba0b724a07d15dbbcaa918790d50c4bec9bb70830d367937190081ffc8c279efa25f6a952e64ec9e327623799fbb1d7aab95b4336cb26dc68f8fd88474e5bae327a4a995c5f8b7d2a2dfb1213f98ddad5b9cf5a9cc3019cf8e4de0",
+      "shared_secret": "006f5e1f2638ce994e654e10fcf1de40d884e9d0d05d82be6c3089a4e279b2c67794994c017cf1e0faba7426862de6caf228590d888037c0522fb65779e5fa277afe",
+      "shared_secret_length": 66,
+      "private_key_length": 65
+    },
+    "x25519": {
+      "curve": "X25519",
+      "curve_id": "0x001D",
+      "server_private_key": "a546ee3bf534781783b52a5a89140029c785321a905c1f5a2824445e1d721816",
+      "client_private_key": "77076d0a7318a57d3c16c17251b26645df4c2f87ebc0992ab177fba51db92c2a",
+      "server_public_key": "fdb6a3b9b9dc73785ececfb6f37cc669f60c6c35af601d006ad2598f73435f6d",
+      "client_public_key": "8520f0098930a754748b7ddcb43ef75a0dbf3a0d26381af4eba4a98eaa9b4e6a",
+      "shared_secret": "a6016891d7b91004d93b08b62d5b4690bb17eb56940d3df73b1c8eb9284e2127",
+      "shared_secret_length": 32
+    }
+  },
+  "tls12_test_vectors": {
+    "ecdhe_p256": {
+      "description": "TLS 1.2 ECDHE with P-256",
+      "tls_version": "1.2",
+      "key_exchange": "ECDHE",
+      "curve": "P-256",
+      "curve_id": "0x0017",
+      "server_private_key": "c6ef9e8f2a5b6d4c8e3f7a1b9c4d2e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9bacbd",
+      "server_key_exchange": "03001741043dce263ba2b3ad8a0f459aa7be69cf91a636eefc7c7e4286e76a639b9773e58210bc1738dc606004d4fc468b8899d713df880c5cbc024844968a2066a5358362",
+      "client_key_exchange": "4104d5ec2343dc862394605aeb2a8c960c12b855d6a2a424df7d035cc11990d50f5f40be909491e3cef8981b3d67bd9c431b928679ed3758a514eaa362a426518307",
+      "expected_pre_master_secret": "56428fa6f094ef2899a4d95845ea7e3742c1a2401d253906c2ca8cc40f3a9cbe"
+    }
+  },
+  "tls13_test_vectors": {
+    "ecdhe_p256": {
+      "description": "TLS 1.3 with P-256 key share",
+      "tls_version": "1.3",
+      "key_exchange": "ECDHE",
+      "curve": "P-256",
+      "curve_id": "0x0017",
+      "server_private_key": "c6ef9e8f2a5b6d4c8e3f7a1b9c4d2e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9bacbd",
+      "client_key_share_entry": "0017004104d5ec2343dc862394605aeb2a8c960c12b855d6a2a424df7d035cc11990d50f5f40be909491e3cef8981b3d67bd9c431b928679ed3758a514eaa362a426518307",
+      "server_key_share_entry": "00170041043dce263ba2b3ad8a0f459aa7be69cf91a636eefc7c7e4286e76a639b9773e58210bc1738dc606004d4fc468b8899d713df880c5cbc024844968a2066a5358362",
+      "expected_shared_secret": "56428fa6f094ef2899a4d95845ea7e3742c1a2401d253906c2ca8cc40f3a9cbe"
+    }
+  }
+}

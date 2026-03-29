@@ -2,7 +2,7 @@
 
 use crate::cipher::{CipherContext, CipherRegistry};
 use crate::error::{DecryptError, Result};
-use crate::types::{Direction, RecordHeader, RecordType, SessionKey};
+use crate::types::{Direction, SessionKey, TlsRecordType, parse_tls_record_header};
 
 /// TLS record decrypter
 ///
@@ -59,8 +59,14 @@ impl TlsDecrypter {
     /// use tls_decryptor::{TlsDecrypter, SessionKey, Direction};
     ///
     /// # fn example() -> Result<(), tls_decryptor::error::DecryptError> {
-    /// let session_key = /* derived from handshake */;
-    /// let decrypter = TlsDecrypter::new(session_key)?;
+    /// // Session key derived from TLS handshake
+    /// let session_key: SessionKey = /* derived from handshake */;
+    ///
+    /// // Create decrypter with the session key
+    /// let mut decrypter = TlsDecrypter::new(session_key)?;
+    ///
+    /// // Decrypt a TLS Application Data record
+    /// let encrypted_bytes = /* TLS record bytes */;
     /// let plaintext = decrypter.decrypt_application_data(
     ///     &encrypted_bytes,
     ///     Direction::ClientToServer,
@@ -74,19 +80,20 @@ impl TlsDecrypter {
         direction: Direction,
     ) -> Result<Vec<u8>> {
         // Parse record header
-        let header = RecordHeader::parse(encrypted_record)?;
+        let (remaining, header) = parse_tls_record_header(encrypted_record)
+            .map_err(|_| DecryptError::InvalidRecordHeader)?;
 
         // Validate record type
-        if header.content_type != RecordType::ApplicationData {
+        if header.record_type != TlsRecordType::ApplicationData {
             return Err(DecryptError::InvalidRecordHeader);
         }
 
         // Extract payload (skip 5-byte record header)
-        if encrypted_record.len() < 5 + header.length as usize {
+        if remaining.len() < header.len as usize {
             return Err(DecryptError::InsufficientData);
         }
 
-        let payload = &encrypted_record[5..5 + header.length as usize];
+        let payload = &remaining[..header.len as usize];
 
         // Get current sequence number
         let sequence_number = self.get_sequence_number(direction);
@@ -157,13 +164,20 @@ impl TlsDecrypter {
     }
 
     /// Increment sequence number for specified direction
+    ///
+    /// # Panics
+    /// Panics if sequence number overflows (reaches 2^64-1).
+    /// According to RFC 8446 Section 5.4, the connection must be terminated
+    /// when the sequence number would wrap.
     fn increment_sequence_number(&mut self, direction: Direction) {
         let seq = match direction {
             Direction::ClientToServer => &mut self.client_to_server_seq,
             Direction::ServerToClient => &mut self.server_to_client_seq,
         };
 
-        *seq = seq.checked_add(1).unwrap_or(0);
+        *seq = seq
+            .checked_add(1)
+            .expect("Sequence number overflow - connection must be terminated per RFC 8446");
     }
 
     /// Set sequence number for specified direction
@@ -194,14 +208,13 @@ impl TlsDecrypter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::TlsVersion;
-    use rustls::CipherSuite;
+    use crate::types::{CipherSuite, TlsVersion};
 
     #[test]
     fn test_decrypter_creation() {
         let session_key = SessionKey::new(
             TlsVersion::Tls13,
-            CipherSuite::TLS13_AES_128_GCM_SHA256,
+            CipherSuite::Tls13Aes128GcmSha256,
             vec![0u8; 16],
             vec![0u8; 16],
             vec![0u8; 12],
@@ -216,7 +229,7 @@ mod tests {
     fn test_sequence_number_management() {
         let session_key = SessionKey::new(
             TlsVersion::Tls13,
-            CipherSuite::TLS13_AES_128_GCM_SHA256,
+            CipherSuite::Tls13Aes128GcmSha256,
             vec![0u8; 16],
             vec![0u8; 16],
             vec![0u8; 12],

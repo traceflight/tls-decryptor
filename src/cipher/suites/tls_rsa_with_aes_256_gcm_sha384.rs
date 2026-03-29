@@ -1,11 +1,10 @@
 //! TLS_RSA_WITH_AES_256_GCM_SHA384 (0x009D) cipher suite implementation
 
 use aes_gcm::{AeadInPlace, Aes256Gcm, KeyInit, Nonce, Tag};
-use rustls::CipherSuite;
 
 use crate::cipher::trait_def::CipherContext;
 use crate::error::{DecryptError, Result};
-use crate::types::TlsVersion;
+use crate::types::CipherSuite;
 
 use super::aead_common::{split_ciphertext_and_tag, split_tls12_ciphertext};
 
@@ -14,27 +13,7 @@ pub struct TlsRsaWithAes256GcmSha384;
 
 impl CipherContext for TlsRsaWithAes256GcmSha384 {
     fn suite(&self) -> CipherSuite {
-        CipherSuite::TLS_RSA_WITH_AES_256_GCM_SHA384
-    }
-
-    fn version(&self) -> TlsVersion {
-        TlsVersion::Tls12
-    }
-
-    fn key_length(&self) -> usize {
-        32 // AES-256
-    }
-
-    fn iv_length(&self) -> usize {
-        4 // explicit nonce (TLS 1.2 AEAD)
-    }
-
-    fn tag_length(&self) -> usize {
-        16
-    }
-
-    fn needs_explicit_nonce(&self) -> bool {
-        true
+        CipherSuite::TlsRsaWithAes256GcmSha384
     }
 
     fn decrypt(
@@ -99,7 +78,7 @@ mod tests {
     #[test]
     fn test_suite_id() {
         let cipher = TlsRsaWithAes256GcmSha384;
-        assert_eq!(cipher.suite(), CipherSuite::TLS_RSA_WITH_AES_256_GCM_SHA384);
+        assert_eq!(cipher.suite(), CipherSuite::TlsRsaWithAes256GcmSha384);
     }
 
     #[test]

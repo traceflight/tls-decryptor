@@ -13,7 +13,7 @@ pub struct TlsRsaWithAes256GcmSha384;
 
 impl CipherContext for TlsRsaWithAes256GcmSha384 {
     fn suite(&self) -> CipherSuite {
-        CipherSuite::TlsRsaWithAes256GcmSha384
+        CipherSuite::TLS_RSA_WITH_AES_256_GCM_SHA384
     }
 
     fn decrypt(
@@ -78,7 +78,7 @@ mod tests {
     #[test]
     fn test_suite_id() {
         let cipher = TlsRsaWithAes256GcmSha384;
-        assert_eq!(cipher.suite(), CipherSuite::TlsRsaWithAes256GcmSha384);
+        assert_eq!(cipher.suite(), CipherSuite::TLS_RSA_WITH_AES_256_GCM_SHA384);
     }
 
     #[test]

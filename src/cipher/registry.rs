@@ -141,21 +141,29 @@ mod tests {
         // TLS 1.2
         assert!(
             registry
-                .get(CipherSuite::TlsRsaWithAes128GcmSha256)
+                .get(CipherSuite::TLS_RSA_WITH_AES_128_GCM_SHA256)
                 .is_some()
         );
         assert!(
             registry
-                .get(CipherSuite::TlsRsaWithAes256GcmSha384)
+                .get(CipherSuite::TLS_RSA_WITH_AES_256_GCM_SHA384)
                 .is_some()
         );
 
         // TLS 1.3
-        assert!(registry.get(CipherSuite::Tls13Aes128GcmSha256).is_some());
-        assert!(registry.get(CipherSuite::Tls13Aes256GcmSha384).is_some());
         assert!(
             registry
-                .get(CipherSuite::Tls13ChaCha20Poly1305Sha256)
+                .get(CipherSuite::TLS13_AES_128_GCM_SHA256)
+                .is_some()
+        );
+        assert!(
+            registry
+                .get(CipherSuite::TLS13_AES_256_GCM_SHA384)
+                .is_some()
+        );
+        assert!(
+            registry
+                .get(CipherSuite::TLS13_CHACHA20_POLY1305_SHA256)
                 .is_some()
         );
     }
@@ -178,7 +186,7 @@ mod tests {
     fn test_unsupported_cipher() {
         let registry = CipherRegistry::new();
         // Use an undefined CipherSuite value
-        assert!(registry.get(CipherSuite::Unknown(0xFFFF)).is_none());
+        assert!(registry.get(CipherSuite::UNKNOWN(0xFFFF)).is_none());
     }
 
     #[test]

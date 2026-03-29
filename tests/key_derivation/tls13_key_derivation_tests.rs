@@ -18,7 +18,7 @@ fn test_derive_keys_tls13_aes_128_gcm() {
 
     let session_key = derive_keys_tls13(
         &shared_secret,
-        CipherSuite::Tls13Aes128GcmSha256,
+        CipherSuite::TLS13_AES_128_GCM_SHA256,
         &handshake_hash,
     )
     .expect("TLS 1.3 key derivation failed");
@@ -50,7 +50,10 @@ fn test_derive_keys_tls13_aes_128_gcm() {
         "Server write IV mismatch"
     );
     assert_eq!(session_key.version, TlsVersion::Tls13);
-    assert_eq!(session_key.cipher_suite, CipherSuite::Tls13Aes128GcmSha256);
+    assert_eq!(
+        session_key.cipher_suite,
+        CipherSuite::TLS13_AES_128_GCM_SHA256
+    );
 }
 
 #[test]
@@ -63,7 +66,7 @@ fn test_derive_keys_tls13_aes_256_gcm() {
 
     let session_key = derive_keys_tls13(
         &shared_secret,
-        CipherSuite::Tls13Aes256GcmSha384,
+        CipherSuite::TLS13_AES_256_GCM_SHA384,
         &handshake_hash,
     )
     .expect("TLS 1.3 key derivation failed");
@@ -95,7 +98,10 @@ fn test_derive_keys_tls13_aes_256_gcm() {
         "Server write IV mismatch"
     );
     assert_eq!(session_key.version, TlsVersion::Tls13);
-    assert_eq!(session_key.cipher_suite, CipherSuite::Tls13Aes256GcmSha384);
+    assert_eq!(
+        session_key.cipher_suite,
+        CipherSuite::TLS13_AES_256_GCM_SHA384
+    );
 }
 
 #[test]
@@ -122,7 +128,7 @@ fn test_tls13_key_deriver_state_machine() {
     // since the full state machine requires parsing actual TLS records
     let session_key = derive_keys_tls13(
         &shared_secret,
-        CipherSuite::Tls13Aes128GcmSha256,
+        CipherSuite::TLS13_AES_128_GCM_SHA256,
         &handshake_hash,
     )
     .expect("TLS 1.3 key derivation failed");
@@ -161,14 +167,14 @@ fn test_derive_keys_tls13_consistency() {
 
     let session_key1 = derive_keys_tls13(
         &shared_secret,
-        CipherSuite::Tls13Aes128GcmSha256,
+        CipherSuite::TLS13_AES_128_GCM_SHA256,
         &handshake_hash,
     )
     .expect("First key derivation failed");
 
     let session_key2 = derive_keys_tls13(
         &shared_secret,
-        CipherSuite::Tls13Aes128GcmSha256,
+        CipherSuite::TLS13_AES_128_GCM_SHA256,
         &handshake_hash,
     )
     .expect("Second key derivation failed");

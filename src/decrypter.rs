@@ -214,7 +214,7 @@ mod tests {
     fn test_decrypter_creation() {
         let session_key = SessionKey::new(
             TlsVersion::Tls13,
-            CipherSuite::Tls13Aes128GcmSha256,
+            CipherSuite::TLS13_AES_128_GCM_SHA256,
             vec![0u8; 16],
             vec![0u8; 16],
             vec![0u8; 12],
@@ -229,7 +229,7 @@ mod tests {
     fn test_sequence_number_management() {
         let session_key = SessionKey::new(
             TlsVersion::Tls13,
-            CipherSuite::Tls13Aes128GcmSha256,
+            CipherSuite::TLS13_AES_128_GCM_SHA256,
             vec![0u8; 16],
             vec![0u8; 16],
             vec![0u8; 12],

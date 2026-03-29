@@ -1,6 +1,6 @@
 [package]
 name = "tls-decryptor"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 description = "TLS 1.2 and TLS 1.3 Application Data record decryption utility library"
 license = "MIT OR Apache-2.0"

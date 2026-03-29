@@ -13,7 +13,7 @@ pub struct TlsEcdheRsaWithChaCha20Poly1305Sha256;
 
 impl CipherContext for TlsEcdheRsaWithChaCha20Poly1305Sha256 {
     fn suite(&self) -> CipherSuite {
-        CipherSuite::TlsEcdheRsaWithChaCha20Poly1305Sha256
+        CipherSuite::TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
     }
 
     fn decrypt(
@@ -72,7 +72,7 @@ mod tests {
         let cipher = TlsEcdheRsaWithChaCha20Poly1305Sha256;
         assert_eq!(
             cipher.suite(),
-            CipherSuite::TlsEcdheRsaWithChaCha20Poly1305Sha256
+            CipherSuite::TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
         );
     }
 

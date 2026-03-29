@@ -13,7 +13,7 @@ pub struct Tls13Aes128GcmSha256;
 
 impl CipherContext for Tls13Aes128GcmSha256 {
     fn suite(&self) -> CipherSuite {
-        CipherSuite::Tls13Aes128GcmSha256
+        CipherSuite::TLS13_AES_128_GCM_SHA256
     }
 
     fn decrypt(
@@ -70,7 +70,7 @@ mod tests {
     #[test]
     fn test_suite_id() {
         let cipher = Tls13Aes128GcmSha256;
-        assert_eq!(cipher.suite(), CipherSuite::Tls13Aes128GcmSha256);
+        assert_eq!(cipher.suite(), CipherSuite::TLS13_AES_128_GCM_SHA256);
     }
 
     #[test]

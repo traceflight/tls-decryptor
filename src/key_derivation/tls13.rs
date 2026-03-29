@@ -196,12 +196,12 @@ impl HandshakeHashAccumulator {
 
         let suite = CipherSuite::from(cipher_suite);
         match suite {
-            CipherSuite::Tls13Aes128GcmSha256 | CipherSuite::Tls13ChaCha20Poly1305Sha256 => {
+            CipherSuite::TLS13_AES_128_GCM_SHA256 | CipherSuite::TLS13_CHACHA20_POLY1305_SHA256 => {
                 let mut hasher = Sha256::new();
                 hasher.update(&self.messages);
                 Ok(hasher.finalize().to_vec())
             }
-            CipherSuite::Tls13Aes256GcmSha384 => {
+            CipherSuite::TLS13_AES_256_GCM_SHA384 => {
                 let mut hasher = Sha384::new();
                 hasher.update(&self.messages);
                 Ok(hasher.finalize().to_vec())
@@ -818,7 +818,7 @@ impl Tls13KeyDeriver {
         )?;
 
         // 5. Derive keys and IVs
-        let (key_len, iv_len) = get_key_iv_length(&cipher_suite);
+        let (key_len, iv_len) = cipher_suite.key_iv_length();
 
         let client_write_key =
             hkdf_expand_label(&client_app_secret, b"key", b"", key_len, &cipher_suite)?;
@@ -1049,13 +1049,13 @@ fn build_hrr_message(hrr: &tls_parser::TlsHelloRetryRequestContents<'_>) -> Vec<
 /// HKDF-Extract(salt, ikm) = HMAC-Hash(salt, ikm)
 fn hkdf_extract(salt: &[u8], ikm: &[u8], cipher_suite: &CipherSuite) -> Result<Vec<u8>> {
     match cipher_suite {
-        CipherSuite::Tls13Aes128GcmSha256 | CipherSuite::Tls13ChaCha20Poly1305Sha256 => {
+        CipherSuite::TLS13_AES_128_GCM_SHA256 | CipherSuite::TLS13_CHACHA20_POLY1305_SHA256 => {
             let mut hmac = <Hmac<Sha256> as KeyInit>::new_from_slice(salt)
                 .map_err(|_| DecryptError::KeyDerivationFailed("HMAC init failed".to_string()))?;
             hmac.update(ikm);
             Ok(hmac.finalize().into_bytes().to_vec())
         }
-        CipherSuite::Tls13Aes256GcmSha384 => {
+        CipherSuite::TLS13_AES_256_GCM_SHA384 => {
             let mut hmac = <Hmac<Sha384> as KeyInit>::new_from_slice(salt)
                 .map_err(|_| DecryptError::KeyDerivationFailed("HMAC init failed".to_string()))?;
             hmac.update(ikm);
@@ -1082,7 +1082,7 @@ fn hkdf_expand_label(
     hkdf_label.extend_from_slice(context);
 
     match cipher_suite {
-        CipherSuite::Tls13Aes128GcmSha256 | CipherSuite::Tls13ChaCha20Poly1305Sha256 => {
+        CipherSuite::TLS13_AES_128_GCM_SHA256 | CipherSuite::TLS13_CHACHA20_POLY1305_SHA256 => {
             let hkdf = Hkdf::<Sha256>::from_prk(secret).map_err(|_| {
                 DecryptError::KeyDerivationFailed("HKDF from_prk failed".to_string())
             })?;
@@ -1091,7 +1091,7 @@ fn hkdf_expand_label(
                 .map_err(|_| DecryptError::KeyDerivationFailed("HKDF expand failed".to_string()))?;
             Ok(okm)
         }
-        CipherSuite::Tls13Aes256GcmSha384 => {
+        CipherSuite::TLS13_AES_256_GCM_SHA384 => {
             let hkdf = Hkdf::<Sha384>::from_prk(secret).map_err(|_| {
                 DecryptError::KeyDerivationFailed("HKDF from_prk failed".to_string())
             })?;
@@ -1102,16 +1102,6 @@ fn hkdf_expand_label(
         }
         _ => Err(DecryptError::UnsupportedCipherSuite(cipher_suite.to_u16())),
     }
-}
-
-/// Get hash length for cipher suite
-fn get_hash_length(cipher_suite: &CipherSuite) -> usize {
-    cipher_suite.hash_length()
-}
-
-/// Get key and IV length for cipher suite
-fn get_key_iv_length(cipher_suite: &CipherSuite) -> (usize, usize) {
-    cipher_suite.key_iv_length()
 }
 
 /// Parse HelloRetryRequest extensions
@@ -1177,7 +1167,7 @@ pub fn derive_keys_tls13(
     // TLS 1.3 uses HKDF for key derivation
     // See RFC 8446 Section 7.1
 
-    let hash_len = get_hash_length(&cipher_suite);
+    let hash_len = cipher_suite.hash_length();
 
     // 1. Compute handshake_secret
     // handshake_secret = HKDF-Extract(0, shared_secret)
@@ -1231,7 +1221,7 @@ pub fn derive_keys_tls13(
     // 7. Derive actual keys and IVs from traffic secrets
     // key = HKDF-Expand-Label(traffic_secret, "key", "", key_length)
     // iv = HKDF-Expand-Label(traffic_secret, "iv", "", iv_length)
-    let (key_len, iv_len) = get_key_iv_length(&cipher_suite);
+    let (key_len, iv_len) = cipher_suite.key_iv_length();
 
     let client_write_key = hkdf_expand_label(
         &client_app_traffic_secret,
@@ -1292,7 +1282,7 @@ mod tests {
 
         let session_key = derive_keys_tls13(
             &shared_secret,
-            CipherSuite::Tls13Aes128GcmSha256,
+            CipherSuite::TLS13_AES_128_GCM_SHA256,
             &handshake_hash,
         )
         .expect("TLS 1.3 key derivation failed");
@@ -1330,7 +1320,7 @@ mod tests {
 
         let session_key = derive_keys_tls13(
             &shared_secret,
-            CipherSuite::Tls13Aes256GcmSha384,
+            CipherSuite::TLS13_AES_256_GCM_SHA384,
             &handshake_hash,
         )
         .expect("TLS 1.3 key derivation failed");
@@ -1356,7 +1346,7 @@ mod tests {
 
         let session_key = derive_keys_tls13(
             &shared_secret,
-            CipherSuite::Tls13ChaCha20Poly1305Sha256,
+            CipherSuite::TLS13_CHACHA20_POLY1305_SHA256,
             &handshake_hash,
         )
         .expect("TLS 1.3 ChaCha20 key derivation failed");
@@ -1393,7 +1383,7 @@ mod tests {
         );
         acc.add_message(
             &[0x02, 0x00, 0x00, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a],
-            Some(CipherSuite::Tls13Aes128GcmSha256),
+            Some(CipherSuite::TLS13_AES_128_GCM_SHA256),
         );
 
         let hash = acc.compute_hash();
@@ -1405,7 +1395,7 @@ mod tests {
     fn test_hkdf_extract_sha256() {
         let salt = vec![0u8; 32];
         let ikm = vec![1u8; 32];
-        let result = hkdf_extract(&salt, &ikm, &CipherSuite::Tls13Aes128GcmSha256);
+        let result = hkdf_extract(&salt, &ikm, &CipherSuite::TLS13_AES_128_GCM_SHA256);
         assert!(result.is_ok());
         assert_eq!(result.unwrap().len(), 32);
     }
@@ -1413,36 +1403,15 @@ mod tests {
     #[test]
     fn test_hkdf_expand_label_sha256() {
         let secret = vec![0u8; 32];
-        let result =
-            hkdf_expand_label(&secret, b"key", b"", 16, &CipherSuite::Tls13Aes128GcmSha256);
+        let result = hkdf_expand_label(
+            &secret,
+            b"key",
+            b"",
+            16,
+            &CipherSuite::TLS13_AES_128_GCM_SHA256,
+        );
         assert!(result.is_ok());
         assert_eq!(result.unwrap().len(), 16);
-    }
-
-    #[test]
-    fn test_get_hash_length() {
-        assert_eq!(get_hash_length(&CipherSuite::Tls13Aes128GcmSha256), 32);
-        assert_eq!(get_hash_length(&CipherSuite::Tls13Aes256GcmSha384), 48);
-        assert_eq!(
-            get_hash_length(&CipherSuite::Tls13ChaCha20Poly1305Sha256),
-            32
-        );
-    }
-
-    #[test]
-    fn test_get_key_iv_length() {
-        assert_eq!(
-            get_key_iv_length(&CipherSuite::Tls13Aes128GcmSha256),
-            (16, 12)
-        );
-        assert_eq!(
-            get_key_iv_length(&CipherSuite::Tls13Aes256GcmSha384),
-            (32, 12)
-        );
-        assert_eq!(
-            get_key_iv_length(&CipherSuite::Tls13ChaCha20Poly1305Sha256),
-            (32, 12)
-        );
     }
 
     #[test]

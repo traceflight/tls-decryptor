@@ -63,7 +63,7 @@ pub fn derive_keys_tls12(
     let key_expansion_seed = [server_random.as_slice(), client_random.as_slice()].concat();
 
     // Determine required key material length based on cipher suite
-    let (key_len, iv_len) = get_key_iv_lengths_tls12(cipher_suite);
+    let (key_len, iv_len) = cipher_suite.key_iv_length();
     // key_block = client_write_key + server_write_key + client_write_IV + server_write_IV
     let key_block_len = 2 * key_len + 2 * iv_len;
     let key_block = prf_tls12(
@@ -106,9 +106,9 @@ fn prf_tls12(
 ) -> Result<Vec<u8>> {
     let seed = [label, seed].concat();
     match cipher_suite {
-        CipherSuite::TlsRsaWithAes256GcmSha384
-        | CipherSuite::TlsEcdheEcdsaWithAes256GcmSha384
-        | CipherSuite::TlsEcdheRsaWithAes256GcmSha384 => {
+        CipherSuite::TLS_RSA_WITH_AES_256_GCM_SHA384
+        | CipherSuite::TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+        | CipherSuite::TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384 => {
             p_hash::<Hmac<Sha384>>(secret, &seed, output_len)
         }
         _ => p_hash::<Hmac<Sha256>>(secret, &seed, output_len),
@@ -147,20 +147,6 @@ fn p_hash<H: Mac + Clone + KeyInit>(
 
     result.truncate(output_len);
     Ok(result)
-}
-
-/// Get TLS 1.2 key and IV lengths
-fn get_key_iv_lengths_tls12(cipher_suite: CipherSuite) -> (usize, usize) {
-    match cipher_suite {
-        CipherSuite::TlsRsaWithAes128GcmSha256 => (16, 4),
-        CipherSuite::TlsRsaWithAes256GcmSha384 => (32, 4),
-        CipherSuite::TlsEcdheEcdsaWithAes128GcmSha256 => (16, 4),
-        CipherSuite::TlsEcdheEcdsaWithAes256GcmSha384 => (32, 4),
-        CipherSuite::TlsEcdheRsaWithAes128GcmSha256 => (16, 4),
-        CipherSuite::TlsEcdheRsaWithAes256GcmSha384 => (32, 4),
-        CipherSuite::TlsEcdheRsaWithChaCha20Poly1305Sha256 => (32, 12),
-        _ => (16, 4),
-    }
 }
 
 /// TLS 1.2 key derivation events
@@ -475,7 +461,7 @@ mod tests {
         }) = event
         {
             assert_eq!(server_random, [1u8; 32]);
-            assert_eq!(cipher_suite, CipherSuite::TlsRsaWithAes128GcmSha256);
+            assert_eq!(cipher_suite, CipherSuite::TLS_RSA_WITH_AES_128_GCM_SHA256);
         } else {
             panic!("Expected ServerHelloReceived event");
         }
@@ -527,7 +513,7 @@ mod tests {
         assert_eq!(session_key.version, TlsVersion::Tls12);
         assert_eq!(
             session_key.cipher_suite,
-            CipherSuite::TlsRsaWithAes128GcmSha256
+            CipherSuite::TLS_RSA_WITH_AES_128_GCM_SHA256
         );
         assert_eq!(
             session_key.get_write_key(Direction::ClientToServer),
@@ -582,31 +568,11 @@ mod tests {
             label,
             seed,
             32,
-            CipherSuite::TlsRsaWithAes128GcmSha256,
+            CipherSuite::TLS_RSA_WITH_AES_128_GCM_SHA256,
         );
         assert!(result.is_ok());
         if let Ok(output) = result {
             assert_eq!(output.len(), 32);
         }
-    }
-
-    #[test]
-    fn test_get_key_iv_lengths_tls12() {
-        assert_eq!(
-            get_key_iv_lengths_tls12(CipherSuite::TlsRsaWithAes128GcmSha256),
-            (16, 4)
-        );
-        assert_eq!(
-            get_key_iv_lengths_tls12(CipherSuite::TlsRsaWithAes256GcmSha384),
-            (32, 4)
-        );
-        assert_eq!(
-            get_key_iv_lengths_tls12(CipherSuite::TlsEcdheEcdsaWithAes128GcmSha256),
-            (16, 4)
-        );
-        assert_eq!(
-            get_key_iv_lengths_tls12(CipherSuite::TlsEcdheRsaWithChaCha20Poly1305Sha256),
-            (32, 12)
-        );
     }
 }

@@ -290,293 +290,297 @@ impl DhParams {
 ///
 /// Provides type-safe representation of TLS cipher suites without depending on rustls.
 /// Reference: rustls CipherSuite definition
+///
+/// Note: Uses SCREAMING_SNAKE_CASE naming convention to match industry standard
+/// (RFC 8446, RFC 5246, etc.)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(u16)]
+#[allow(non_camel_case_types)]
 pub enum CipherSuite {
     /// TLS_NULL_WITH_NULL_NULL
-    TlsNullWithNullNull = 0x0000,
+    TLS_NULL_WITH_NULL_NULL = 0x0000,
     /// TLS_RSA_WITH_NULL_MD5
-    TlsRsaWithNullMd5 = 0x0001,
+    TLS_RSA_WITH_NULL_MD5 = 0x0001,
     /// TLS_RSA_WITH_NULL_SHA
-    TlsRsaWithNullSha = 0x0002,
+    TLS_RSA_WITH_NULL_SHA = 0x0002,
     /// TLS_RSA_WITH_RC4_128_MD5
-    TlsRsaWithRc4128Md5 = 0x0004,
+    TLS_RSA_WITH_RC4_128_MD5 = 0x0004,
     /// TLS_RSA_WITH_RC4_128_SHA
-    TlsRsaWithRc4128Sha = 0x0005,
+    TLS_RSA_WITH_RC4_128_SHA = 0x0005,
     /// TLS_RSA_WITH_DES_CBC_SHA
-    TlsRsaWithDesCbcSha = 0x0009,
+    TLS_RSA_WITH_DES_CBC_SHA = 0x0009,
     /// TLS_RSA_WITH_3DES_EDE_CBC_SHA
-    TlsRsaWith3desEdeCbcSha = 0x000a,
+    TLS_RSA_WITH_3DES_EDE_CBC_SHA = 0x000a,
     /// TLS_RSA_WITH_AES_128_CBC_SHA
-    TlsRsaWithAes128CbcSha = 0x002f,
+    TLS_RSA_WITH_AES_128_CBC_SHA = 0x002f,
     /// TLS_RSA_WITH_AES_256_CBC_SHA
-    TlsRsaWithAes256CbcSha = 0x0035,
+    TLS_RSA_WITH_AES_256_CBC_SHA = 0x0035,
     /// TLS_RSA_WITH_AES_128_CBC_SHA256
-    TlsRsaWithAes128CbcSha256 = 0x003c,
+    TLS_RSA_WITH_AES_128_CBC_SHA256 = 0x003c,
     /// TLS_RSA_WITH_AES_256_CBC_SHA256
-    TlsRsaWithAes256CbcSha256 = 0x003d,
+    TLS_RSA_WITH_AES_256_CBC_SHA256 = 0x003d,
     /// TLS_RSA_WITH_AES_128_GCM_SHA256
-    TlsRsaWithAes128GcmSha256 = 0x009c,
+    TLS_RSA_WITH_AES_128_GCM_SHA256 = 0x009c,
     /// TLS_RSA_WITH_AES_256_GCM_SHA384
-    TlsRsaWithAes256GcmSha384 = 0x009d,
+    TLS_RSA_WITH_AES_256_GCM_SHA384 = 0x009d,
     /// TLS_DHE_RSA_WITH_AES_128_GCM_SHA256
-    TlsDheRsaWithAes128GcmSha256 = 0x009e,
+    TLS_DHE_RSA_WITH_AES_128_GCM_SHA256 = 0x009e,
     /// TLS_DHE_RSA_WITH_AES_256_GCM_SHA384
-    TlsDheRsaWithAes256GcmSha384 = 0x009f,
+    TLS_DHE_RSA_WITH_AES_256_GCM_SHA384 = 0x009f,
     /// TLS_PSK_WITH_AES_128_GCM_SHA256
-    TlsPskWithAes128GcmSha256 = 0x00a8,
+    TLS_PSK_WITH_AES_128_GCM_SHA256 = 0x00a8,
     /// TLS_PSK_WITH_AES_256_GCM_SHA384
-    TlsPskWithAes256GcmSha384 = 0x00a9,
+    TLS_PSK_WITH_AES_256_GCM_SHA384 = 0x00a9,
     /// TLS_EMPTY_RENEGOTIATION_INFO_SCSV
-    TlsEmptyRenegotiationInfoScsv = 0x00ff,
+    TLS_EMPTY_RENEGOTIATION_INFO_SCSV = 0x00ff,
     /// TLS13_AES_128_GCM_SHA256
-    Tls13Aes128GcmSha256 = 0x1301,
+    TLS13_AES_128_GCM_SHA256 = 0x1301,
     /// TLS13_AES_256_GCM_SHA384
-    Tls13Aes256GcmSha384 = 0x1302,
+    TLS13_AES_256_GCM_SHA384 = 0x1302,
     /// TLS13_CHACHA20_POLY1305_SHA256
-    Tls13ChaCha20Poly1305Sha256 = 0x1303,
+    TLS13_CHACHA20_POLY1305_SHA256 = 0x1303,
     /// TLS13_AES_128_CCM_SHA256
-    Tls13Aes128CcmSha256 = 0x1304,
+    TLS13_AES_128_CCM_SHA256 = 0x1304,
     /// TLS13_AES_128_CCM_8_SHA256
-    Tls13Aes128Ccm8Sha256 = 0x1305,
+    TLS13_AES_128_CCM_8_SHA256 = 0x1305,
     /// TLS_ECDH_ECDSA_WITH_NULL_SHA
-    TlsEcdhEcdsaWithNullSha = 0xc001,
+    TLS_ECDH_ECDSA_WITH_NULL_SHA = 0xc001,
     /// TLS_ECDH_ECDSA_WITH_RC4_128_SHA
-    TlsEcdhEcdsaWithRc4128Sha = 0xc002,
+    TLS_ECDH_ECDSA_WITH_RC4_128_SHA = 0xc002,
     /// TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA
-    TlsEcdhEcdsaWith3desEdeCbcSha = 0xc003,
+    TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA = 0xc003,
     /// TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA
-    TlsEcdhEcdsaWithAes128CbcSha = 0xc004,
+    TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA = 0xc004,
     /// TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA
-    TlsEcdhEcdsaWithAes256CbcSha = 0xc005,
+    TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA = 0xc005,
     /// TLS_ECDHE_ECDSA_WITH_NULL_SHA
-    TlsEcdheEcdsaWithNullSha = 0xc006,
+    TLS_ECDHE_ECDSA_WITH_NULL_SHA = 0xc006,
     /// TLS_ECDHE_ECDSA_WITH_RC4_128_SHA
-    TlsEcdheEcdsaWithRc4128Sha = 0xc007,
+    TLS_ECDHE_ECDSA_WITH_RC4_128_SHA = 0xc007,
     /// TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA
-    TlsEcdheEcdsaWith3desEdeCbcSha = 0xc008,
+    TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA = 0xc008,
     /// TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
-    TlsEcdheEcdsaWithAes128CbcSha = 0xc009,
+    TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA = 0xc009,
     /// TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
-    TlsEcdheEcdsaWithAes256CbcSha = 0xc00a,
+    TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA = 0xc00a,
     /// TLS_ECDH_RSA_WITH_NULL_SHA
-    TlsEcdhRsaWithNullSha = 0xc00b,
+    TLS_ECDH_RSA_WITH_NULL_SHA = 0xc00b,
     /// TLS_ECDH_RSA_WITH_RC4_128_SHA
-    TlsEcdhRsaWithRc4128Sha = 0xc00c,
+    TLS_ECDH_RSA_WITH_RC4_128_SHA = 0xc00c,
     /// TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA
-    TlsEcdhRsaWith3desEdeCbcSha = 0xc00d,
+    TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA = 0xc00d,
     /// TLS_ECDH_RSA_WITH_AES_128_CBC_SHA
-    TlsEcdhRsaWithAes128CbcSha = 0xc00e,
+    TLS_ECDH_RSA_WITH_AES_128_CBC_SHA = 0xc00e,
     /// TLS_ECDH_RSA_WITH_AES_256_CBC_SHA
-    TlsEcdhRsaWithAes256CbcSha = 0xc00f,
+    TLS_ECDH_RSA_WITH_AES_256_CBC_SHA = 0xc00f,
     /// TLS_ECDHE_RSA_WITH_NULL_SHA
-    TlsEcdheRsaWithNullSha = 0xc010,
+    TLS_ECDHE_RSA_WITH_NULL_SHA = 0xc010,
     /// TLS_ECDHE_RSA_WITH_RC4_128_SHA
-    TlsEcdheRsaWithRc4128Sha = 0xc011,
+    TLS_ECDHE_RSA_WITH_RC4_128_SHA = 0xc011,
     /// TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA
-    TlsEcdheRsaWith3desEdeCbcSha = 0xc012,
+    TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA = 0xc012,
     /// TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
-    TlsEcdheRsaWithAes128CbcSha = 0xc013,
+    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA = 0xc013,
     /// TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
-    TlsEcdheRsaWithAes256CbcSha = 0xc014,
+    TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA = 0xc014,
     /// TLS_ECDH_anon_WITH_NULL_SHA
-    TlsEcdhAnonWithNullSha = 0xc015,
+    TLS_ECDH_ANON_WITH_NULL_SHA = 0xc015,
     /// TLS_ECDH_anon_WITH_RC4_128_SHA
-    TlsEcdhAnonWithRc4128Sha = 0xc016,
+    TLS_ECDH_ANON_WITH_RC4_128_SHA = 0xc016,
     /// TLS_ECDH_anon_WITH_3DES_EDE_CBC_SHA
-    TlsEcdhAnonWith3desEdeCbcSha = 0xc017,
+    TLS_ECDH_ANON_WITH_3DES_EDE_CBC_SHA = 0xc017,
     /// TLS_ECDH_anon_WITH_AES_128_CBC_SHA
-    TlsEcdhAnonWithAes128CbcSha = 0xc018,
+    TLS_ECDH_ANON_WITH_AES_128_CBC_SHA = 0xc018,
     /// TLS_ECDH_anon_WITH_AES_256_CBC_SHA
-    TlsEcdhAnonWithAes256CbcSha = 0xc019,
+    TLS_ECDH_ANON_WITH_AES_256_CBC_SHA = 0xc019,
     /// TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
-    TlsEcdheEcdsaWithAes128CbcSha256 = 0xc023,
+    TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256 = 0xc023,
     /// TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384
-    TlsEcdheEcdsaWithAes256CbcSha384 = 0xc024,
+    TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384 = 0xc024,
     /// TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256
-    TlsEcdhEcdsaWithAes128CbcSha256 = 0xc025,
+    TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256 = 0xc025,
     /// TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384
-    TlsEcdhEcdsaWithAes256CbcSha384 = 0xc026,
+    TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384 = 0xc026,
     /// TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
-    TlsEcdheRsaWithAes128CbcSha256 = 0xc027,
+    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 = 0xc027,
     /// TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384
-    TlsEcdheRsaWithAes256CbcSha384 = 0xc028,
+    TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384 = 0xc028,
     /// TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256
-    TlsEcdhRsaWithAes128CbcSha256 = 0xc029,
+    TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256 = 0xc029,
     /// TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384
-    TlsEcdhRsaWithAes256CbcSha384 = 0xc02a,
+    TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384 = 0xc02a,
     /// TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
-    TlsEcdheEcdsaWithAes128GcmSha256 = 0xc02b,
+    TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256 = 0xc02b,
     /// TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
-    TlsEcdheEcdsaWithAes256GcmSha384 = 0xc02c,
+    TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384 = 0xc02c,
     /// TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256
-    TlsEcdhEcdsaWithAes128GcmSha256 = 0xc02d,
+    TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256 = 0xc02d,
     /// TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384
-    TlsEcdhEcdsaWithAes256GcmSha384 = 0xc02e,
+    TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384 = 0xc02e,
     /// TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-    TlsEcdheRsaWithAes128GcmSha256 = 0xc02f,
+    TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 = 0xc02f,
     /// TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-    TlsEcdheRsaWithAes256GcmSha384 = 0xc030,
+    TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384 = 0xc030,
     /// TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256
-    TlsEcdhRsaWithAes128GcmSha256 = 0xc031,
+    TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256 = 0xc031,
     /// TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384
-    TlsEcdhRsaWithAes256GcmSha384 = 0xc032,
+    TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384 = 0xc032,
     /// TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
-    TlsEcdheRsaWithChaCha20Poly1305Sha256 = 0xcca8,
+    TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256 = 0xcca8,
     /// TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256
-    TlsEcdheEcdsaWithChaCha20Poly1305Sha256 = 0xcca9,
+    TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256 = 0xcca9,
     /// TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256
-    TlsDheRsaWithChaCha20Poly1305Sha256 = 0xccaa,
+    TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256 = 0xccaa,
     /// Unknown cipher suite (holds the raw u16 value)
-    Unknown(u16),
+    UNKNOWN(u16),
 }
 
 impl CipherSuite {
     /// Convert from u16 to CipherSuite
     pub fn from_u16(value: u16) -> Self {
         match value {
-            0x0000 => Self::TlsNullWithNullNull,
-            0x0001 => Self::TlsRsaWithNullMd5,
-            0x0002 => Self::TlsRsaWithNullSha,
-            0x0004 => Self::TlsRsaWithRc4128Md5,
-            0x0005 => Self::TlsRsaWithRc4128Sha,
-            0x0009 => Self::TlsRsaWithDesCbcSha,
-            0x000a => Self::TlsRsaWith3desEdeCbcSha,
-            0x002f => Self::TlsRsaWithAes128CbcSha,
-            0x0035 => Self::TlsRsaWithAes256CbcSha,
-            0x003c => Self::TlsRsaWithAes128CbcSha256,
-            0x003d => Self::TlsRsaWithAes256CbcSha256,
-            0x009c => Self::TlsRsaWithAes128GcmSha256,
-            0x009d => Self::TlsRsaWithAes256GcmSha384,
-            0x009e => Self::TlsDheRsaWithAes128GcmSha256,
-            0x009f => Self::TlsDheRsaWithAes256GcmSha384,
-            0x00a8 => Self::TlsPskWithAes128GcmSha256,
-            0x00a9 => Self::TlsPskWithAes256GcmSha384,
-            0x00ff => Self::TlsEmptyRenegotiationInfoScsv,
-            0x1301 => Self::Tls13Aes128GcmSha256,
-            0x1302 => Self::Tls13Aes256GcmSha384,
-            0x1303 => Self::Tls13ChaCha20Poly1305Sha256,
-            0x1304 => Self::Tls13Aes128CcmSha256,
-            0x1305 => Self::Tls13Aes128Ccm8Sha256,
-            0xc001 => Self::TlsEcdhEcdsaWithNullSha,
-            0xc002 => Self::TlsEcdhEcdsaWithRc4128Sha,
-            0xc003 => Self::TlsEcdhEcdsaWith3desEdeCbcSha,
-            0xc004 => Self::TlsEcdhEcdsaWithAes128CbcSha,
-            0xc005 => Self::TlsEcdhEcdsaWithAes256CbcSha,
-            0xc006 => Self::TlsEcdheEcdsaWithNullSha,
-            0xc007 => Self::TlsEcdheEcdsaWithRc4128Sha,
-            0xc008 => Self::TlsEcdheEcdsaWith3desEdeCbcSha,
-            0xc009 => Self::TlsEcdheEcdsaWithAes128CbcSha,
-            0xc00a => Self::TlsEcdheEcdsaWithAes256CbcSha,
-            0xc00b => Self::TlsEcdhRsaWithNullSha,
-            0xc00c => Self::TlsEcdhRsaWithRc4128Sha,
-            0xc00d => Self::TlsEcdhRsaWith3desEdeCbcSha,
-            0xc00e => Self::TlsEcdhRsaWithAes128CbcSha,
-            0xc00f => Self::TlsEcdhRsaWithAes256CbcSha,
-            0xc010 => Self::TlsEcdheRsaWithNullSha,
-            0xc011 => Self::TlsEcdheRsaWithRc4128Sha,
-            0xc012 => Self::TlsEcdheRsaWith3desEdeCbcSha,
-            0xc013 => Self::TlsEcdheRsaWithAes128CbcSha,
-            0xc014 => Self::TlsEcdheRsaWithAes256CbcSha,
-            0xc015 => Self::TlsEcdhAnonWithNullSha,
-            0xc016 => Self::TlsEcdhAnonWithRc4128Sha,
-            0xc017 => Self::TlsEcdhAnonWith3desEdeCbcSha,
-            0xc018 => Self::TlsEcdhAnonWithAes128CbcSha,
-            0xc019 => Self::TlsEcdhAnonWithAes256CbcSha,
-            0xc023 => Self::TlsEcdheEcdsaWithAes128CbcSha256,
-            0xc024 => Self::TlsEcdheEcdsaWithAes256CbcSha384,
-            0xc025 => Self::TlsEcdhEcdsaWithAes128CbcSha256,
-            0xc026 => Self::TlsEcdhEcdsaWithAes256CbcSha384,
-            0xc027 => Self::TlsEcdheRsaWithAes128CbcSha256,
-            0xc028 => Self::TlsEcdheRsaWithAes256CbcSha384,
-            0xc029 => Self::TlsEcdhRsaWithAes128CbcSha256,
-            0xc02a => Self::TlsEcdhRsaWithAes256CbcSha384,
-            0xc02b => Self::TlsEcdheEcdsaWithAes128GcmSha256,
-            0xc02c => Self::TlsEcdheEcdsaWithAes256GcmSha384,
-            0xc02d => Self::TlsEcdhEcdsaWithAes128GcmSha256,
-            0xc02e => Self::TlsEcdhEcdsaWithAes256GcmSha384,
-            0xc02f => Self::TlsEcdheRsaWithAes128GcmSha256,
-            0xc030 => Self::TlsEcdheRsaWithAes256GcmSha384,
-            0xc031 => Self::TlsEcdhRsaWithAes128GcmSha256,
-            0xc032 => Self::TlsEcdhRsaWithAes256GcmSha384,
-            0xcca8 => Self::TlsEcdheRsaWithChaCha20Poly1305Sha256,
-            0xcca9 => Self::TlsEcdheEcdsaWithChaCha20Poly1305Sha256,
-            0xccaa => Self::TlsDheRsaWithChaCha20Poly1305Sha256,
-            _ => Self::Unknown(value),
+            0x0000 => Self::TLS_NULL_WITH_NULL_NULL,
+            0x0001 => Self::TLS_RSA_WITH_NULL_MD5,
+            0x0002 => Self::TLS_RSA_WITH_NULL_SHA,
+            0x0004 => Self::TLS_RSA_WITH_RC4_128_MD5,
+            0x0005 => Self::TLS_RSA_WITH_RC4_128_SHA,
+            0x0009 => Self::TLS_RSA_WITH_DES_CBC_SHA,
+            0x000a => Self::TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+            0x002f => Self::TLS_RSA_WITH_AES_128_CBC_SHA,
+            0x0035 => Self::TLS_RSA_WITH_AES_256_CBC_SHA,
+            0x003c => Self::TLS_RSA_WITH_AES_128_CBC_SHA256,
+            0x003d => Self::TLS_RSA_WITH_AES_256_CBC_SHA256,
+            0x009c => Self::TLS_RSA_WITH_AES_128_GCM_SHA256,
+            0x009d => Self::TLS_RSA_WITH_AES_256_GCM_SHA384,
+            0x009e => Self::TLS_DHE_RSA_WITH_AES_128_GCM_SHA256,
+            0x009f => Self::TLS_DHE_RSA_WITH_AES_256_GCM_SHA384,
+            0x00a8 => Self::TLS_PSK_WITH_AES_128_GCM_SHA256,
+            0x00a9 => Self::TLS_PSK_WITH_AES_256_GCM_SHA384,
+            0x00ff => Self::TLS_EMPTY_RENEGOTIATION_INFO_SCSV,
+            0x1301 => Self::TLS13_AES_128_GCM_SHA256,
+            0x1302 => Self::TLS13_AES_256_GCM_SHA384,
+            0x1303 => Self::TLS13_CHACHA20_POLY1305_SHA256,
+            0x1304 => Self::TLS13_AES_128_CCM_SHA256,
+            0x1305 => Self::TLS13_AES_128_CCM_8_SHA256,
+            0xc001 => Self::TLS_ECDH_ECDSA_WITH_NULL_SHA,
+            0xc002 => Self::TLS_ECDH_ECDSA_WITH_RC4_128_SHA,
+            0xc003 => Self::TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA,
+            0xc004 => Self::TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA,
+            0xc005 => Self::TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA,
+            0xc006 => Self::TLS_ECDHE_ECDSA_WITH_NULL_SHA,
+            0xc007 => Self::TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
+            0xc008 => Self::TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA,
+            0xc009 => Self::TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+            0xc00a => Self::TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+            0xc00b => Self::TLS_ECDH_RSA_WITH_NULL_SHA,
+            0xc00c => Self::TLS_ECDH_RSA_WITH_RC4_128_SHA,
+            0xc00d => Self::TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA,
+            0xc00e => Self::TLS_ECDH_RSA_WITH_AES_128_CBC_SHA,
+            0xc00f => Self::TLS_ECDH_RSA_WITH_AES_256_CBC_SHA,
+            0xc010 => Self::TLS_ECDHE_RSA_WITH_NULL_SHA,
+            0xc011 => Self::TLS_ECDHE_RSA_WITH_RC4_128_SHA,
+            0xc012 => Self::TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+            0xc013 => Self::TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+            0xc014 => Self::TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+            0xc015 => Self::TLS_ECDH_ANON_WITH_NULL_SHA,
+            0xc016 => Self::TLS_ECDH_ANON_WITH_RC4_128_SHA,
+            0xc017 => Self::TLS_ECDH_ANON_WITH_3DES_EDE_CBC_SHA,
+            0xc018 => Self::TLS_ECDH_ANON_WITH_AES_128_CBC_SHA,
+            0xc019 => Self::TLS_ECDH_ANON_WITH_AES_256_CBC_SHA,
+            0xc023 => Self::TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
+            0xc024 => Self::TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384,
+            0xc025 => Self::TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256,
+            0xc026 => Self::TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384,
+            0xc027 => Self::TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
+            0xc028 => Self::TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384,
+            0xc029 => Self::TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256,
+            0xc02a => Self::TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384,
+            0xc02b => Self::TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+            0xc02c => Self::TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+            0xc02d => Self::TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256,
+            0xc02e => Self::TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384,
+            0xc02f => Self::TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+            0xc030 => Self::TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+            0xc031 => Self::TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256,
+            0xc032 => Self::TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384,
+            0xcca8 => Self::TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
+            0xcca9 => Self::TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
+            0xccaa => Self::TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
+            _ => Self::UNKNOWN(value),
         }
     }
 
     /// Convert to u16
     pub fn to_u16(self) -> u16 {
         match self {
-            Self::TlsNullWithNullNull => 0x0000,
-            Self::TlsRsaWithNullMd5 => 0x0001,
-            Self::TlsRsaWithNullSha => 0x0002,
-            Self::TlsRsaWithRc4128Md5 => 0x0004,
-            Self::TlsRsaWithRc4128Sha => 0x0005,
-            Self::TlsRsaWithDesCbcSha => 0x0009,
-            Self::TlsRsaWith3desEdeCbcSha => 0x000a,
-            Self::TlsRsaWithAes128CbcSha => 0x002f,
-            Self::TlsRsaWithAes256CbcSha => 0x0035,
-            Self::TlsRsaWithAes128CbcSha256 => 0x003c,
-            Self::TlsRsaWithAes256CbcSha256 => 0x003d,
-            Self::TlsRsaWithAes128GcmSha256 => 0x009c,
-            Self::TlsRsaWithAes256GcmSha384 => 0x009d,
-            Self::TlsDheRsaWithAes128GcmSha256 => 0x009e,
-            Self::TlsDheRsaWithAes256GcmSha384 => 0x009f,
-            Self::TlsPskWithAes128GcmSha256 => 0x00a8,
-            Self::TlsPskWithAes256GcmSha384 => 0x00a9,
-            Self::TlsEmptyRenegotiationInfoScsv => 0x00ff,
-            Self::Tls13Aes128GcmSha256 => 0x1301,
-            Self::Tls13Aes256GcmSha384 => 0x1302,
-            Self::Tls13ChaCha20Poly1305Sha256 => 0x1303,
-            Self::Tls13Aes128CcmSha256 => 0x1304,
-            Self::Tls13Aes128Ccm8Sha256 => 0x1305,
-            Self::TlsEcdhEcdsaWithNullSha => 0xc001,
-            Self::TlsEcdhEcdsaWithRc4128Sha => 0xc002,
-            Self::TlsEcdhEcdsaWith3desEdeCbcSha => 0xc003,
-            Self::TlsEcdhEcdsaWithAes128CbcSha => 0xc004,
-            Self::TlsEcdhEcdsaWithAes256CbcSha => 0xc005,
-            Self::TlsEcdheEcdsaWithNullSha => 0xc006,
-            Self::TlsEcdheEcdsaWithRc4128Sha => 0xc007,
-            Self::TlsEcdheEcdsaWith3desEdeCbcSha => 0xc008,
-            Self::TlsEcdheEcdsaWithAes128CbcSha => 0xc009,
-            Self::TlsEcdheEcdsaWithAes256CbcSha => 0xc00a,
-            Self::TlsEcdhRsaWithNullSha => 0xc00b,
-            Self::TlsEcdhRsaWithRc4128Sha => 0xc00c,
-            Self::TlsEcdhRsaWith3desEdeCbcSha => 0xc00d,
-            Self::TlsEcdhRsaWithAes128CbcSha => 0xc00e,
-            Self::TlsEcdhRsaWithAes256CbcSha => 0xc00f,
-            Self::TlsEcdheRsaWithNullSha => 0xc010,
-            Self::TlsEcdheRsaWithRc4128Sha => 0xc011,
-            Self::TlsEcdheRsaWith3desEdeCbcSha => 0xc012,
-            Self::TlsEcdheRsaWithAes128CbcSha => 0xc013,
-            Self::TlsEcdheRsaWithAes256CbcSha => 0xc014,
-            Self::TlsEcdhAnonWithNullSha => 0xc015,
-            Self::TlsEcdhAnonWithRc4128Sha => 0xc016,
-            Self::TlsEcdhAnonWith3desEdeCbcSha => 0xc017,
-            Self::TlsEcdhAnonWithAes128CbcSha => 0xc018,
-            Self::TlsEcdhAnonWithAes256CbcSha => 0xc019,
-            Self::TlsEcdheEcdsaWithAes128CbcSha256 => 0xc023,
-            Self::TlsEcdheEcdsaWithAes256CbcSha384 => 0xc024,
-            Self::TlsEcdhEcdsaWithAes128CbcSha256 => 0xc025,
-            Self::TlsEcdhEcdsaWithAes256CbcSha384 => 0xc026,
-            Self::TlsEcdheRsaWithAes128CbcSha256 => 0xc027,
-            Self::TlsEcdheRsaWithAes256CbcSha384 => 0xc028,
-            Self::TlsEcdhRsaWithAes128CbcSha256 => 0xc029,
-            Self::TlsEcdhRsaWithAes256CbcSha384 => 0xc02a,
-            Self::TlsEcdheEcdsaWithAes128GcmSha256 => 0xc02b,
-            Self::TlsEcdheEcdsaWithAes256GcmSha384 => 0xc02c,
-            Self::TlsEcdhEcdsaWithAes128GcmSha256 => 0xc02d,
-            Self::TlsEcdhEcdsaWithAes256GcmSha384 => 0xc02e,
-            Self::TlsEcdheRsaWithAes128GcmSha256 => 0xc02f,
-            Self::TlsEcdheRsaWithAes256GcmSha384 => 0xc030,
-            Self::TlsEcdhRsaWithAes128GcmSha256 => 0xc031,
-            Self::TlsEcdhRsaWithAes256GcmSha384 => 0xc032,
-            Self::TlsEcdheRsaWithChaCha20Poly1305Sha256 => 0xcca8,
-            Self::TlsEcdheEcdsaWithChaCha20Poly1305Sha256 => 0xcca9,
-            Self::TlsDheRsaWithChaCha20Poly1305Sha256 => 0xccaa,
-            Self::Unknown(v) => v,
+            Self::TLS_NULL_WITH_NULL_NULL => 0x0000,
+            Self::TLS_RSA_WITH_NULL_MD5 => 0x0001,
+            Self::TLS_RSA_WITH_NULL_SHA => 0x0002,
+            Self::TLS_RSA_WITH_RC4_128_MD5 => 0x0004,
+            Self::TLS_RSA_WITH_RC4_128_SHA => 0x0005,
+            Self::TLS_RSA_WITH_DES_CBC_SHA => 0x0009,
+            Self::TLS_RSA_WITH_3DES_EDE_CBC_SHA => 0x000a,
+            Self::TLS_RSA_WITH_AES_128_CBC_SHA => 0x002f,
+            Self::TLS_RSA_WITH_AES_256_CBC_SHA => 0x0035,
+            Self::TLS_RSA_WITH_AES_128_CBC_SHA256 => 0x003c,
+            Self::TLS_RSA_WITH_AES_256_CBC_SHA256 => 0x003d,
+            Self::TLS_RSA_WITH_AES_128_GCM_SHA256 => 0x009c,
+            Self::TLS_RSA_WITH_AES_256_GCM_SHA384 => 0x009d,
+            Self::TLS_DHE_RSA_WITH_AES_128_GCM_SHA256 => 0x009e,
+            Self::TLS_DHE_RSA_WITH_AES_256_GCM_SHA384 => 0x009f,
+            Self::TLS_PSK_WITH_AES_128_GCM_SHA256 => 0x00a8,
+            Self::TLS_PSK_WITH_AES_256_GCM_SHA384 => 0x00a9,
+            Self::TLS_EMPTY_RENEGOTIATION_INFO_SCSV => 0x00ff,
+            Self::TLS13_AES_128_GCM_SHA256 => 0x1301,
+            Self::TLS13_AES_256_GCM_SHA384 => 0x1302,
+            Self::TLS13_CHACHA20_POLY1305_SHA256 => 0x1303,
+            Self::TLS13_AES_128_CCM_SHA256 => 0x1304,
+            Self::TLS13_AES_128_CCM_8_SHA256 => 0x1305,
+            Self::TLS_ECDH_ECDSA_WITH_NULL_SHA => 0xc001,
+            Self::TLS_ECDH_ECDSA_WITH_RC4_128_SHA => 0xc002,
+            Self::TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA => 0xc003,
+            Self::TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA => 0xc004,
+            Self::TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA => 0xc005,
+            Self::TLS_ECDHE_ECDSA_WITH_NULL_SHA => 0xc006,
+            Self::TLS_ECDHE_ECDSA_WITH_RC4_128_SHA => 0xc007,
+            Self::TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA => 0xc008,
+            Self::TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA => 0xc009,
+            Self::TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA => 0xc00a,
+            Self::TLS_ECDH_RSA_WITH_NULL_SHA => 0xc00b,
+            Self::TLS_ECDH_RSA_WITH_RC4_128_SHA => 0xc00c,
+            Self::TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA => 0xc00d,
+            Self::TLS_ECDH_RSA_WITH_AES_128_CBC_SHA => 0xc00e,
+            Self::TLS_ECDH_RSA_WITH_AES_256_CBC_SHA => 0xc00f,
+            Self::TLS_ECDHE_RSA_WITH_NULL_SHA => 0xc010,
+            Self::TLS_ECDHE_RSA_WITH_RC4_128_SHA => 0xc011,
+            Self::TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA => 0xc012,
+            Self::TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA => 0xc013,
+            Self::TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA => 0xc014,
+            Self::TLS_ECDH_ANON_WITH_NULL_SHA => 0xc015,
+            Self::TLS_ECDH_ANON_WITH_RC4_128_SHA => 0xc016,
+            Self::TLS_ECDH_ANON_WITH_3DES_EDE_CBC_SHA => 0xc017,
+            Self::TLS_ECDH_ANON_WITH_AES_128_CBC_SHA => 0xc018,
+            Self::TLS_ECDH_ANON_WITH_AES_256_CBC_SHA => 0xc019,
+            Self::TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256 => 0xc023,
+            Self::TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384 => 0xc024,
+            Self::TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256 => 0xc025,
+            Self::TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384 => 0xc026,
+            Self::TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 => 0xc027,
+            Self::TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384 => 0xc028,
+            Self::TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256 => 0xc029,
+            Self::TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384 => 0xc02a,
+            Self::TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256 => 0xc02b,
+            Self::TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384 => 0xc02c,
+            Self::TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256 => 0xc02d,
+            Self::TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384 => 0xc02e,
+            Self::TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 => 0xc02f,
+            Self::TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384 => 0xc030,
+            Self::TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256 => 0xc031,
+            Self::TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384 => 0xc032,
+            Self::TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256 => 0xcca8,
+            Self::TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256 => 0xcca9,
+            Self::TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256 => 0xccaa,
+            Self::UNKNOWN(v) => v,
         }
     }
 
@@ -584,54 +588,54 @@ impl CipherSuite {
     pub fn hash_length(self) -> usize {
         match self {
             // SHA-256 based suites
-            Self::Tls13Aes128GcmSha256
-            | Self::Tls13ChaCha20Poly1305Sha256
-            | Self::Tls13Aes128CcmSha256
-            | Self::Tls13Aes128Ccm8Sha256
-            | Self::TlsRsaWithAes128GcmSha256
-            | Self::TlsRsaWithAes128CbcSha256
-            | Self::TlsDheRsaWithAes128GcmSha256
-            | Self::TlsPskWithAes128GcmSha256
-            | Self::TlsEcdheEcdsaWithAes128CbcSha256
-            | Self::TlsEcdhEcdsaWithAes128CbcSha256
-            | Self::TlsEcdheRsaWithAes128CbcSha256
-            | Self::TlsEcdhRsaWithAes128CbcSha256
-            | Self::TlsEcdheEcdsaWithAes128GcmSha256
-            | Self::TlsEcdhEcdsaWithAes128GcmSha256
-            | Self::TlsEcdheRsaWithAes128GcmSha256
-            | Self::TlsEcdhRsaWithAes128GcmSha256
-            | Self::TlsEcdheRsaWithChaCha20Poly1305Sha256
-            | Self::TlsEcdheEcdsaWithChaCha20Poly1305Sha256
-            | Self::TlsDheRsaWithChaCha20Poly1305Sha256 => 32,
+            Self::TLS13_AES_128_GCM_SHA256
+            | Self::TLS13_CHACHA20_POLY1305_SHA256
+            | Self::TLS13_AES_128_CCM_SHA256
+            | Self::TLS13_AES_128_CCM_8_SHA256
+            | Self::TLS_RSA_WITH_AES_128_GCM_SHA256
+            | Self::TLS_RSA_WITH_AES_128_CBC_SHA256
+            | Self::TLS_DHE_RSA_WITH_AES_128_GCM_SHA256
+            | Self::TLS_PSK_WITH_AES_128_GCM_SHA256
+            | Self::TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
+            | Self::TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256
+            | Self::TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
+            | Self::TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256
+            | Self::TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+            | Self::TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256
+            | Self::TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+            | Self::TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256
+            | Self::TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+            | Self::TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256
+            | Self::TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256 => 32,
             // SHA-384 based suites
-            Self::Tls13Aes256GcmSha384
-            | Self::TlsRsaWithAes256GcmSha384
-            | Self::TlsRsaWithAes256CbcSha256
-            | Self::TlsDheRsaWithAes256GcmSha384
-            | Self::TlsPskWithAes256GcmSha384
-            | Self::TlsEcdheEcdsaWithAes256CbcSha384
-            | Self::TlsEcdhEcdsaWithAes256CbcSha384
-            | Self::TlsEcdheRsaWithAes256CbcSha384
-            | Self::TlsEcdhRsaWithAes256CbcSha384
-            | Self::TlsEcdheEcdsaWithAes256GcmSha384
-            | Self::TlsEcdhEcdsaWithAes256GcmSha384
-            | Self::TlsEcdheRsaWithAes256GcmSha384
-            | Self::TlsEcdhRsaWithAes256GcmSha384 => 48,
+            Self::TLS13_AES_256_GCM_SHA384
+            | Self::TLS_RSA_WITH_AES_256_GCM_SHA384
+            | Self::TLS_RSA_WITH_AES_256_CBC_SHA256
+            | Self::TLS_DHE_RSA_WITH_AES_256_GCM_SHA384
+            | Self::TLS_PSK_WITH_AES_256_GCM_SHA384
+            | Self::TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384
+            | Self::TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384
+            | Self::TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384
+            | Self::TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384
+            | Self::TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+            | Self::TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384
+            | Self::TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+            | Self::TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384 => 48,
             // SHA-1 based suites
-            Self::TlsRsaWithNullSha
-            | Self::TlsRsaWithRc4128Sha
-            | Self::TlsRsaWithDesCbcSha
-            | Self::TlsRsaWith3desEdeCbcSha
-            | Self::TlsRsaWithAes128CbcSha
-            | Self::TlsRsaWithAes256CbcSha
-            | Self::TlsEcdheEcdsaWithAes128CbcSha
-            | Self::TlsEcdheEcdsaWithAes256CbcSha
-            | Self::TlsEcdheRsaWithAes128CbcSha
-            | Self::TlsEcdheRsaWithAes256CbcSha => 20,
+            Self::TLS_RSA_WITH_NULL_SHA
+            | Self::TLS_RSA_WITH_RC4_128_SHA
+            | Self::TLS_RSA_WITH_DES_CBC_SHA
+            | Self::TLS_RSA_WITH_3DES_EDE_CBC_SHA
+            | Self::TLS_RSA_WITH_AES_128_CBC_SHA
+            | Self::TLS_RSA_WITH_AES_256_CBC_SHA
+            | Self::TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
+            | Self::TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
+            | Self::TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
+            | Self::TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA => 20,
             // MD5 based suites
-            Self::TlsRsaWithNullMd5 | Self::TlsRsaWithRc4128Md5 => 16,
+            Self::TLS_RSA_WITH_NULL_MD5 | Self::TLS_RSA_WITH_RC4_128_MD5 => 16,
             // Unknown defaults to SHA-256
-            Self::Unknown(_) => 32,
+            Self::UNKNOWN(_) => 32,
             // Other suites default to SHA-256
             _ => 32,
         }
@@ -644,87 +648,87 @@ impl CipherSuite {
     pub fn key_iv_length(self) -> (usize, usize) {
         match self {
             // TLS 1.3 AES-128-GCM (iv_len = 12)
-            Self::Tls13Aes128GcmSha256
-            | Self::Tls13Aes128CcmSha256
-            | Self::Tls13Aes128Ccm8Sha256 => (16, 12),
+            Self::TLS13_AES_128_GCM_SHA256
+            | Self::TLS13_AES_128_CCM_SHA256
+            | Self::TLS13_AES_128_CCM_8_SHA256 => (16, 12),
             // TLS 1.3 AES-256-GCM (iv_len = 12)
-            Self::Tls13Aes256GcmSha384 => (32, 12),
+            Self::TLS13_AES_256_GCM_SHA384 => (32, 12),
             // TLS 1.3 ChaCha20-Poly1305 (iv_len = 12)
             // TLS 1.2 ChaCha20-Poly1305 (iv_len = 12)
-            Self::Tls13ChaCha20Poly1305Sha256
-            | Self::TlsEcdheRsaWithChaCha20Poly1305Sha256
-            | Self::TlsEcdheEcdsaWithChaCha20Poly1305Sha256
-            | Self::TlsDheRsaWithChaCha20Poly1305Sha256 => (32, 12),
+            Self::TLS13_CHACHA20_POLY1305_SHA256
+            | Self::TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+            | Self::TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256
+            | Self::TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256 => (32, 12),
             // TLS 1.2 AES-128-GCM (salt_len = 4)
-            Self::TlsRsaWithAes128GcmSha256
-            | Self::TlsDheRsaWithAes128GcmSha256
-            | Self::TlsPskWithAes128GcmSha256
-            | Self::TlsEcdheEcdsaWithAes128GcmSha256
-            | Self::TlsEcdhEcdsaWithAes128GcmSha256
-            | Self::TlsEcdheRsaWithAes128GcmSha256
-            | Self::TlsEcdhRsaWithAes128GcmSha256 => (16, 4),
+            Self::TLS_RSA_WITH_AES_128_GCM_SHA256
+            | Self::TLS_DHE_RSA_WITH_AES_128_GCM_SHA256
+            | Self::TLS_PSK_WITH_AES_128_GCM_SHA256
+            | Self::TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+            | Self::TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256
+            | Self::TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+            | Self::TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256 => (16, 4),
             // TLS 1.2 AES-256-GCM (salt_len = 4)
-            Self::TlsRsaWithAes256GcmSha384
-            | Self::TlsDheRsaWithAes256GcmSha384
-            | Self::TlsPskWithAes256GcmSha384
-            | Self::TlsEcdheEcdsaWithAes256GcmSha384
-            | Self::TlsEcdhEcdsaWithAes256GcmSha384
-            | Self::TlsEcdheRsaWithAes256GcmSha384
-            | Self::TlsEcdhRsaWithAes256GcmSha384 => (32, 4),
+            Self::TLS_RSA_WITH_AES_256_GCM_SHA384
+            | Self::TLS_DHE_RSA_WITH_AES_256_GCM_SHA384
+            | Self::TLS_PSK_WITH_AES_256_GCM_SHA384
+            | Self::TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+            | Self::TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384
+            | Self::TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+            | Self::TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384 => (32, 4),
             // AES-128-CBC
-            Self::TlsRsaWithAes128CbcSha
-            | Self::TlsRsaWithAes128CbcSha256
-            | Self::TlsEcdheEcdsaWithAes128CbcSha
-            | Self::TlsEcdheEcdsaWithAes128CbcSha256
-            | Self::TlsEcdheRsaWithAes128CbcSha
-            | Self::TlsEcdheRsaWithAes128CbcSha256
-            | Self::TlsEcdhEcdsaWithAes128CbcSha
-            | Self::TlsEcdhEcdsaWithAes128CbcSha256
-            | Self::TlsEcdhRsaWithAes128CbcSha
-            | Self::TlsEcdhRsaWithAes128CbcSha256
-            | Self::TlsEcdhAnonWithAes128CbcSha => (16, 16),
+            Self::TLS_RSA_WITH_AES_128_CBC_SHA
+            | Self::TLS_RSA_WITH_AES_128_CBC_SHA256
+            | Self::TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
+            | Self::TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
+            | Self::TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
+            | Self::TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
+            | Self::TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA
+            | Self::TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256
+            | Self::TLS_ECDH_RSA_WITH_AES_128_CBC_SHA
+            | Self::TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256
+            | Self::TLS_ECDH_ANON_WITH_AES_128_CBC_SHA => (16, 16),
             // AES-256-CBC
-            Self::TlsRsaWithAes256CbcSha
-            | Self::TlsRsaWithAes256CbcSha256
-            | Self::TlsEcdheEcdsaWithAes256CbcSha
-            | Self::TlsEcdheEcdsaWithAes256CbcSha384
-            | Self::TlsEcdheRsaWithAes256CbcSha
-            | Self::TlsEcdheRsaWithAes256CbcSha384
-            | Self::TlsEcdhEcdsaWithAes256CbcSha
-            | Self::TlsEcdhEcdsaWithAes256CbcSha384
-            | Self::TlsEcdhRsaWithAes256CbcSha
-            | Self::TlsEcdhRsaWithAes256CbcSha384
-            | Self::TlsEcdhAnonWithAes256CbcSha => (32, 16),
+            Self::TLS_RSA_WITH_AES_256_CBC_SHA
+            | Self::TLS_RSA_WITH_AES_256_CBC_SHA256
+            | Self::TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
+            | Self::TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384
+            | Self::TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
+            | Self::TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384
+            | Self::TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA
+            | Self::TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384
+            | Self::TLS_ECDH_RSA_WITH_AES_256_CBC_SHA
+            | Self::TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384
+            | Self::TLS_ECDH_ANON_WITH_AES_256_CBC_SHA => (32, 16),
             // 3DES
-            Self::TlsRsaWith3desEdeCbcSha
-            | Self::TlsEcdheEcdsaWith3desEdeCbcSha
-            | Self::TlsEcdheRsaWith3desEdeCbcSha
-            | Self::TlsEcdhEcdsaWith3desEdeCbcSha
-            | Self::TlsEcdhRsaWith3desEdeCbcSha
-            | Self::TlsEcdhAnonWith3desEdeCbcSha => (24, 8),
+            Self::TLS_RSA_WITH_3DES_EDE_CBC_SHA
+            | Self::TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA
+            | Self::TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA
+            | Self::TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA
+            | Self::TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA
+            | Self::TLS_ECDH_ANON_WITH_3DES_EDE_CBC_SHA => (24, 8),
             // DES
-            Self::TlsRsaWithDesCbcSha => (8, 8),
+            Self::TLS_RSA_WITH_DES_CBC_SHA => (8, 8),
             // RC4
-            Self::TlsRsaWithRc4128Md5
-            | Self::TlsRsaWithRc4128Sha
-            | Self::TlsEcdheEcdsaWithRc4128Sha
-            | Self::TlsEcdheRsaWithRc4128Sha
-            | Self::TlsEcdhEcdsaWithRc4128Sha
-            | Self::TlsEcdhRsaWithRc4128Sha
-            | Self::TlsEcdhAnonWithRc4128Sha => (16, 0),
+            Self::TLS_RSA_WITH_RC4_128_MD5
+            | Self::TLS_RSA_WITH_RC4_128_SHA
+            | Self::TLS_ECDHE_ECDSA_WITH_RC4_128_SHA
+            | Self::TLS_ECDHE_RSA_WITH_RC4_128_SHA
+            | Self::TLS_ECDH_ECDSA_WITH_RC4_128_SHA
+            | Self::TLS_ECDH_RSA_WITH_RC4_128_SHA
+            | Self::TLS_ECDH_ANON_WITH_RC4_128_SHA => (16, 0),
             // NULL
-            Self::TlsNullWithNullNull
-            | Self::TlsRsaWithNullMd5
-            | Self::TlsRsaWithNullSha
-            | Self::TlsEcdheEcdsaWithNullSha
-            | Self::TlsEcdheRsaWithNullSha
-            | Self::TlsEcdhEcdsaWithNullSha
-            | Self::TlsEcdhRsaWithNullSha
-            | Self::TlsEcdhAnonWithNullSha => (0, 0),
+            Self::TLS_NULL_WITH_NULL_NULL
+            | Self::TLS_RSA_WITH_NULL_MD5
+            | Self::TLS_RSA_WITH_NULL_SHA
+            | Self::TLS_ECDHE_ECDSA_WITH_NULL_SHA
+            | Self::TLS_ECDHE_RSA_WITH_NULL_SHA
+            | Self::TLS_ECDH_ECDSA_WITH_NULL_SHA
+            | Self::TLS_ECDH_RSA_WITH_NULL_SHA
+            | Self::TLS_ECDH_ANON_WITH_NULL_SHA => (0, 0),
             // SCSV (Signaling Cipher Suite Value) - not a real cipher
-            Self::TlsEmptyRenegotiationInfoScsv => (0, 0),
+            Self::TLS_EMPTY_RENEGOTIATION_INFO_SCSV => (0, 0),
             // Unknown defaults to AES-128-GCM
-            Self::Unknown(_) => (16, 12),
+            Self::UNKNOWN(_) => (16, 12),
         }
     }
 
@@ -732,11 +736,11 @@ impl CipherSuite {
     pub fn is_tls13(self) -> bool {
         matches!(
             self,
-            Self::Tls13Aes128GcmSha256
-                | Self::Tls13Aes256GcmSha384
-                | Self::Tls13ChaCha20Poly1305Sha256
-                | Self::Tls13Aes128CcmSha256
-                | Self::Tls13Aes128Ccm8Sha256
+            Self::TLS13_AES_128_GCM_SHA256
+                | Self::TLS13_AES_256_GCM_SHA384
+                | Self::TLS13_CHACHA20_POLY1305_SHA256
+                | Self::TLS13_AES_128_CCM_SHA256
+                | Self::TLS13_AES_128_CCM_8_SHA256
         )
     }
 
@@ -744,28 +748,28 @@ impl CipherSuite {
     pub fn is_aead(self) -> bool {
         matches!(
             self,
-            Self::Tls13Aes128GcmSha256
-                | Self::Tls13Aes256GcmSha384
-                | Self::Tls13ChaCha20Poly1305Sha256
-                | Self::Tls13Aes128CcmSha256
-                | Self::Tls13Aes128Ccm8Sha256
-                | Self::TlsRsaWithAes128GcmSha256
-                | Self::TlsRsaWithAes256GcmSha384
-                | Self::TlsDheRsaWithAes128GcmSha256
-                | Self::TlsDheRsaWithAes256GcmSha384
-                | Self::TlsPskWithAes128GcmSha256
-                | Self::TlsPskWithAes256GcmSha384
-                | Self::TlsEcdheEcdsaWithAes128GcmSha256
-                | Self::TlsEcdheEcdsaWithAes256GcmSha384
-                | Self::TlsEcdhEcdsaWithAes128GcmSha256
-                | Self::TlsEcdhEcdsaWithAes256GcmSha384
-                | Self::TlsEcdheRsaWithAes128GcmSha256
-                | Self::TlsEcdheRsaWithAes256GcmSha384
-                | Self::TlsEcdhRsaWithAes128GcmSha256
-                | Self::TlsEcdhRsaWithAes256GcmSha384
-                | Self::TlsEcdheRsaWithChaCha20Poly1305Sha256
-                | Self::TlsEcdheEcdsaWithChaCha20Poly1305Sha256
-                | Self::TlsDheRsaWithChaCha20Poly1305Sha256
+            Self::TLS13_AES_128_GCM_SHA256
+                | Self::TLS13_AES_256_GCM_SHA384
+                | Self::TLS13_CHACHA20_POLY1305_SHA256
+                | Self::TLS13_AES_128_CCM_SHA256
+                | Self::TLS13_AES_128_CCM_8_SHA256
+                | Self::TLS_RSA_WITH_AES_128_GCM_SHA256
+                | Self::TLS_RSA_WITH_AES_256_GCM_SHA384
+                | Self::TLS_DHE_RSA_WITH_AES_128_GCM_SHA256
+                | Self::TLS_DHE_RSA_WITH_AES_256_GCM_SHA384
+                | Self::TLS_PSK_WITH_AES_128_GCM_SHA256
+                | Self::TLS_PSK_WITH_AES_256_GCM_SHA384
+                | Self::TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+                | Self::TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+                | Self::TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256
+                | Self::TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384
+                | Self::TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+                | Self::TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+                | Self::TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256
+                | Self::TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384
+                | Self::TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+                | Self::TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256
+                | Self::TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256
         )
     }
 
@@ -775,30 +779,30 @@ impl CipherSuite {
     pub fn tag_length(self) -> usize {
         match self {
             // AES-GCM and ChaCha20-Poly1305 use 16-byte tags
-            Self::Tls13Aes128GcmSha256
-            | Self::Tls13Aes256GcmSha384
-            | Self::Tls13ChaCha20Poly1305Sha256
-            | Self::TlsRsaWithAes128GcmSha256
-            | Self::TlsRsaWithAes256GcmSha384
-            | Self::TlsDheRsaWithAes128GcmSha256
-            | Self::TlsDheRsaWithAes256GcmSha384
-            | Self::TlsPskWithAes128GcmSha256
-            | Self::TlsPskWithAes256GcmSha384
-            | Self::TlsEcdheEcdsaWithAes128GcmSha256
-            | Self::TlsEcdheEcdsaWithAes256GcmSha384
-            | Self::TlsEcdhEcdsaWithAes128GcmSha256
-            | Self::TlsEcdhEcdsaWithAes256GcmSha384
-            | Self::TlsEcdheRsaWithAes128GcmSha256
-            | Self::TlsEcdheRsaWithAes256GcmSha384
-            | Self::TlsEcdhRsaWithAes128GcmSha256
-            | Self::TlsEcdhRsaWithAes256GcmSha384
-            | Self::TlsEcdheRsaWithChaCha20Poly1305Sha256
-            | Self::TlsEcdheEcdsaWithChaCha20Poly1305Sha256
-            | Self::TlsDheRsaWithChaCha20Poly1305Sha256 => 16,
+            Self::TLS13_AES_128_GCM_SHA256
+            | Self::TLS13_AES_256_GCM_SHA384
+            | Self::TLS13_CHACHA20_POLY1305_SHA256
+            | Self::TLS_RSA_WITH_AES_128_GCM_SHA256
+            | Self::TLS_RSA_WITH_AES_256_GCM_SHA384
+            | Self::TLS_DHE_RSA_WITH_AES_128_GCM_SHA256
+            | Self::TLS_DHE_RSA_WITH_AES_256_GCM_SHA384
+            | Self::TLS_PSK_WITH_AES_128_GCM_SHA256
+            | Self::TLS_PSK_WITH_AES_256_GCM_SHA384
+            | Self::TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+            | Self::TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+            | Self::TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256
+            | Self::TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384
+            | Self::TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+            | Self::TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+            | Self::TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256
+            | Self::TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384
+            | Self::TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+            | Self::TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256
+            | Self::TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256 => 16,
             // AES-128-CCM uses 16-byte tag
-            Self::Tls13Aes128CcmSha256 => 16,
+            Self::TLS13_AES_128_CCM_SHA256 => 16,
             // AES-128-CCM-8 uses 8-byte tag
-            Self::Tls13Aes128Ccm8Sha256 => 8,
+            Self::TLS13_AES_128_CCM_8_SHA256 => 8,
             // Non-AEAD suites return 0
             _ => 0,
         }
@@ -813,22 +817,22 @@ impl CipherSuite {
         // TLS 1.2 ChaCha20-Poly1305 (RFC 7905) does not use explicit nonce
         matches!(
             self,
-            Self::TlsRsaWithAes128GcmSha256
-                | Self::TlsRsaWithAes256GcmSha384
-                | Self::TlsDheRsaWithAes128GcmSha256
-                | Self::TlsDheRsaWithAes256GcmSha384
-                | Self::TlsPskWithAes128GcmSha256
-                | Self::TlsPskWithAes256GcmSha384
-                | Self::TlsEcdheEcdsaWithAes128GcmSha256
-                | Self::TlsEcdheEcdsaWithAes256GcmSha384
-                | Self::TlsEcdhEcdsaWithAes128GcmSha256
-                | Self::TlsEcdhEcdsaWithAes256GcmSha384
-                | Self::TlsEcdheRsaWithAes128GcmSha256
-                | Self::TlsEcdheRsaWithAes256GcmSha384
-                | Self::TlsEcdhRsaWithAes128GcmSha256
-                | Self::TlsEcdhRsaWithAes256GcmSha384
-                | Self::Tls13Aes128CcmSha256
-                | Self::Tls13Aes128Ccm8Sha256
+            Self::TLS_RSA_WITH_AES_128_GCM_SHA256
+                | Self::TLS_RSA_WITH_AES_256_GCM_SHA384
+                | Self::TLS_DHE_RSA_WITH_AES_128_GCM_SHA256
+                | Self::TLS_DHE_RSA_WITH_AES_256_GCM_SHA384
+                | Self::TLS_PSK_WITH_AES_128_GCM_SHA256
+                | Self::TLS_PSK_WITH_AES_256_GCM_SHA384
+                | Self::TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+                | Self::TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+                | Self::TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256
+                | Self::TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384
+                | Self::TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+                | Self::TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+                | Self::TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256
+                | Self::TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384
+                | Self::TLS13_AES_128_CCM_SHA256
+                | Self::TLS13_AES_128_CCM_8_SHA256
         )
     }
 
@@ -866,75 +870,84 @@ mod cipher_suite_tests {
     fn test_cipher_suite_from_u16() {
         assert_eq!(
             CipherSuite::from_u16(0x1301),
-            CipherSuite::Tls13Aes128GcmSha256
+            CipherSuite::TLS13_AES_128_GCM_SHA256
         );
         assert_eq!(
             CipherSuite::from_u16(0x1302),
-            CipherSuite::Tls13Aes256GcmSha384
+            CipherSuite::TLS13_AES_256_GCM_SHA384
         );
         assert_eq!(
             CipherSuite::from_u16(0x1303),
-            CipherSuite::Tls13ChaCha20Poly1305Sha256
+            CipherSuite::TLS13_CHACHA20_POLY1305_SHA256
         );
         assert_eq!(
             CipherSuite::from_u16(0xcca8),
-            CipherSuite::TlsEcdheRsaWithChaCha20Poly1305Sha256
+            CipherSuite::TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
         );
         assert!(matches!(
             CipherSuite::from_u16(0xffff),
-            CipherSuite::Unknown(0xffff)
+            CipherSuite::UNKNOWN(0xffff)
         ));
     }
 
     #[test]
     fn test_cipher_suite_to_u16() {
-        assert_eq!(CipherSuite::Tls13Aes128GcmSha256.to_u16(), 0x1301);
-        assert_eq!(CipherSuite::Tls13Aes256GcmSha384.to_u16(), 0x1302);
-        assert_eq!(CipherSuite::Tls13ChaCha20Poly1305Sha256.to_u16(), 0x1303);
+        assert_eq!(CipherSuite::TLS13_AES_128_GCM_SHA256.to_u16(), 0x1301);
+        assert_eq!(CipherSuite::TLS13_AES_256_GCM_SHA384.to_u16(), 0x1302);
+        assert_eq!(CipherSuite::TLS13_CHACHA20_POLY1305_SHA256.to_u16(), 0x1303);
         assert_eq!(
-            CipherSuite::TlsEcdheRsaWithChaCha20Poly1305Sha256.to_u16(),
+            CipherSuite::TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256.to_u16(),
             0xcca8
         );
-        assert_eq!(CipherSuite::Unknown(0xffff).to_u16(), 0xffff);
+        assert_eq!(CipherSuite::UNKNOWN(0xffff).to_u16(), 0xffff);
     }
 
     #[test]
     fn test_cipher_suite_hash_length() {
-        assert_eq!(CipherSuite::Tls13Aes128GcmSha256.hash_length(), 32);
-        assert_eq!(CipherSuite::Tls13ChaCha20Poly1305Sha256.hash_length(), 32);
-        assert_eq!(CipherSuite::Tls13Aes256GcmSha384.hash_length(), 48);
+        assert_eq!(CipherSuite::TLS13_AES_128_GCM_SHA256.hash_length(), 32);
+        assert_eq!(
+            CipherSuite::TLS13_CHACHA20_POLY1305_SHA256.hash_length(),
+            32
+        );
+        assert_eq!(CipherSuite::TLS13_AES_256_GCM_SHA384.hash_length(), 48);
     }
 
     #[test]
     fn test_cipher_suite_key_iv_length() {
-        assert_eq!(CipherSuite::Tls13Aes128GcmSha256.key_iv_length(), (16, 12));
-        assert_eq!(CipherSuite::Tls13Aes256GcmSha384.key_iv_length(), (32, 12));
         assert_eq!(
-            CipherSuite::Tls13ChaCha20Poly1305Sha256.key_iv_length(),
+            CipherSuite::TLS13_AES_128_GCM_SHA256.key_iv_length(),
+            (16, 12)
+        );
+        assert_eq!(
+            CipherSuite::TLS13_AES_256_GCM_SHA384.key_iv_length(),
+            (32, 12)
+        );
+        assert_eq!(
+            CipherSuite::TLS13_CHACHA20_POLY1305_SHA256.key_iv_length(),
             (32, 12)
         );
     }
 
     #[test]
     fn test_cipher_suite_is_tls13() {
-        assert!(CipherSuite::Tls13Aes128GcmSha256.is_tls13());
-        assert!(CipherSuite::Tls13ChaCha20Poly1305Sha256.is_tls13());
-        assert!(!CipherSuite::TlsEcdheRsaWithChaCha20Poly1305Sha256.is_tls13());
+        assert!(CipherSuite::TLS13_AES_128_GCM_SHA256.is_tls13());
+        assert!(CipherSuite::TLS13_CHACHA20_POLY1305_SHA256.is_tls13());
+        assert!(!CipherSuite::TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256.is_tls13());
     }
 
     #[test]
     fn test_cipher_suite_is_aead() {
-        assert!(CipherSuite::Tls13Aes128GcmSha256.is_aead());
-        assert!(CipherSuite::Tls13ChaCha20Poly1305Sha256.is_aead());
-        assert!(CipherSuite::TlsEcdheRsaWithChaCha20Poly1305Sha256.is_aead());
-        assert!(!CipherSuite::TlsRsaWithAes128CbcSha.is_aead());
+        assert!(CipherSuite::TLS13_AES_128_GCM_SHA256.is_aead());
+        assert!(CipherSuite::TLS13_CHACHA20_POLY1305_SHA256.is_aead());
+        assert!(CipherSuite::TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256.is_aead());
+        assert!(!CipherSuite::TLS_RSA_WITH_AES_128_CBC_SHA.is_aead());
     }
 
     #[test]
     fn test_cipher_suite_conversion_with_tls_parser() {
         let id = TlsCipherSuiteID(0x1301);
         let suite: CipherSuite = id.into();
-        assert_eq!(suite, CipherSuite::Tls13Aes128GcmSha256);
+        assert_eq!(suite, CipherSuite::TLS13_AES_128_GCM_SHA256);
 
         let back: TlsCipherSuiteID = suite.into();
         assert_eq!(back, TlsCipherSuiteID(0x1301));

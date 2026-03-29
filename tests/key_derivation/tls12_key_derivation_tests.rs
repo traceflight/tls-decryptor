@@ -27,7 +27,7 @@ fn test_derive_keys_tls12_aes_128_gcm() {
         &client_random,
         &server_random,
         &pre_master_secret,
-        CipherSuite::TlsRsaWithAes128GcmSha256,
+        CipherSuite::TLS_RSA_WITH_AES_128_GCM_SHA256,
     )
     .expect("TLS 1.2 key derivation failed");
 
@@ -60,7 +60,7 @@ fn test_derive_keys_tls12_aes_128_gcm() {
     assert_eq!(session_key.version, TlsVersion::Tls12);
     assert_eq!(
         session_key.cipher_suite,
-        CipherSuite::TlsRsaWithAes128GcmSha256
+        CipherSuite::TLS_RSA_WITH_AES_128_GCM_SHA256
     );
 }
 
@@ -77,7 +77,7 @@ fn test_derive_keys_tls12_aes_256_gcm() {
         &client_random,
         &server_random,
         &pre_master_secret,
-        CipherSuite::TlsRsaWithAes256GcmSha384,
+        CipherSuite::TLS_RSA_WITH_AES_256_GCM_SHA384,
     )
     .expect("TLS 1.2 key derivation failed");
 
@@ -110,7 +110,7 @@ fn test_derive_keys_tls12_aes_256_gcm() {
     assert_eq!(session_key.version, TlsVersion::Tls12);
     assert_eq!(
         session_key.cipher_suite,
-        CipherSuite::TlsRsaWithAes256GcmSha384
+        CipherSuite::TLS_RSA_WITH_AES_256_GCM_SHA384
     );
 }
 
@@ -140,7 +140,7 @@ fn test_tls12_key_deriver_state_machine() {
         &client_random,
         &server_random,
         &pre_master_secret,
-        CipherSuite::TlsRsaWithAes128GcmSha256,
+        CipherSuite::TLS_RSA_WITH_AES_128_GCM_SHA256,
     )
     .expect("TLS 1.2 key derivation failed");
 

@@ -59,16 +59,17 @@ tls-decryptor = "0.1.0"
 ```rust
 use tls_decryptor::{
     TlsDecrypter, SessionKey, Direction,
-    key_derivation::{derive_keys_tls12, decrypt_pre_master_secret_rsa},
-    types::TlsVersion,
+    key_derivation::derive_keys_tls12,
+    types::CipherSuite,
 };
-use rustls::CipherSuite;
 
 fn main() -> Result<(), tls_decryptor::DecryptError> {
     // 1. Decrypt Pre-Master Secret using private key
-    let private_key_pem = std::fs::read_to_string("server_key.pem")?;
-    let encrypted_pms = /* extracted from ClientKeyExchange message */;
-    let pre_master_secret = decrypt_pre_master_secret_rsa(&private_key_pem, &encrypted_pms)?;
+    // Note: This requires an external RSA library (e.g., rsa crate)
+    // let private_key_pem = std::fs::read_to_string("server_key.pem")?;
+    // let encrypted_pms = /* extracted from ClientKeyExchange message */;
+    // let pre_master_secret = /* decrypt using RSA private key */;
+    let pre_master_secret = /* Pre-Master Secret obtained from RSA decryption */;
 
     // 2. Derive session keys
     let client_random = /* extracted from ClientHello (32 bytes) */;
@@ -103,11 +104,12 @@ fn main() -> Result<(), tls_decryptor::DecryptError> {
 use tls_decryptor::{
     TlsDecrypter, Direction,
     key_derivation::derive_keys_tls13,
+    types::CipherSuite,
 };
-use rustls::CipherSuite;
 
 fn main() -> Result<(), tls_decryptor::DecryptError> {
     // 1. Compute ECDHE shared secret
+    // Use util::compute_shared_secret_tls13 or compute manually
     let shared_secret = /* ECDHE shared secret */;
 
     // 2. Derive session keys
@@ -224,6 +226,8 @@ enum Direction {
 TLS 1.2 key derivation function using PRF (Pseudo-Random Function).
 
 ```rust
+use tls_decryptor::types::CipherSuite;
+
 pub fn derive_keys_tls12(
     client_random: &[u8; 32],
     server_random: &[u8; 32],
@@ -236,6 +240,8 @@ pub fn derive_keys_tls12(
 TLS 1.3 key derivation function using HKDF (HMAC-based Key Derivation Function).
 
 ```rust
+use tls_decryptor::types::CipherSuite;
+
 pub fn derive_keys_tls13(
     shared_secret: &[u8],
     cipher_suite: CipherSuite,
@@ -256,8 +262,8 @@ The library uses an extensible cipher suite architecture:
 Adding a new cipher suite:
 1. Create a new file in `src/cipher/suites/`
 2. Implement the `CipherContext` trait
-3. Add `pub mod` declaration in [`suites/mod.rs`](src/cipher/suites/mod.rs)
-4. Register in [`registry.rs`](src/cipher/registry.rs) `register_builtins()`
+3. Add `pub mod` declaration in [`cipher/suites/mod.rs`](src/cipher/suites/mod.rs)
+4. Register in [`cipher/registry.rs`](src/cipher/registry.rs) `register_builtins()`
 
 ## Technical Details
 
